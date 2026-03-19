@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EFM Tracking Sheet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4d;
+      --text: #e6edf3;
+      --text-muted: #8b9cb3;
+      --accent: #58a6ff;
+      --accent-hover: #79b8ff;
+      --success: #3fb950;
+      --warning: #d29922;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin: 0 0 1.5rem 0;
+      letter-spacing: -0.02em;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: var(--border);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .sheet-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1200px;
+    }
+
+    th {
+      text-align: left;
+      padding: 0.75rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255,255,255,0.02);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      font-family: inherit;
+      font-size: 0.875rem;
+      padding: 0.4rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+      width: 100%;
+      min-width: 0;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
+    }
+
+    input[type="checkbox"] {
+      width: 1.1rem;
+      height: 1.1rem;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .col-ritm { min-width: 140px; }
+    .col-name { min-width: 140px; }
+    .col-wbs { min-width: 120px; }
+    .col-project-pr { min-width: 110px; }
+    .col-vendor { min-width: 120px; }
+    .col-routine-support { min-width: 140px; }
+    .col-lodging-tools { min-width: 140px; }
+    .col-security-pct { min-width: 90px; }
+    .col-forecasted-budget { min-width: 160px; }
+    .col-director { min-width: 120px; }
+    .col-vp { min-width: 100px; }
+    .col-requestor { min-width: 120px; }
+    .col-justification { min-width: 180px; max-width: 320px; white-space: normal; word-wrap: break-word; }
+    .col-justification .cell-value { white-space: pre-wrap; word-wrap: break-word; }
+    .cell-input-textarea { width: 100%; min-width: 0; resize: vertical; box-sizing: border-box; white-space: pre-wrap; word-wrap: break-word; }
+    .col-check { width: 42px; text-align: center; }
+    .select-all-label { font-weight: normal; font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; cursor: pointer; }
+    .select-all-label input { margin-right: 0.25rem; }
+    .col-quarter { min-width: 80px; }
+    .col-capex-opex { min-width: 110px; }
+    .col-date { min-width: 115px; }
+    .col-amount { min-width: 110px; }
+    .col-amount.amount-mismatch {
+      background: rgba(210, 153, 34, 0.35);
+      box-shadow: inset 0 0 0 1px rgba(210, 153, 34, 0.5);
+    }
+    .col-month { min-width: 100px; }
+    .col-monthly-amount { min-width: 120px; }
+
+    .row-actions {
+      padding: 0.25rem !important;
+    }
+
+    .row-actions .btn {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      margin-right: 0.25rem;
+    }
+
+    .btn-row-edit {
+      color: var(--accent);
+    }
+
+    .btn-row-del {
+      padding: 0.25rem;
+      min-width: auto;
+      font-size: 1rem;
+      line-height: 1;
+      color: var(--text-muted);
+    }
+
+    .btn-row-del:hover {
+      color: #f85149;
+    }
+
+    td.editable-cell {
+      cursor: pointer;
+      position: relative;
+    }
+
+    td.editable-cell:hover {
+      background: rgba(88, 166, 255, 0.08);
+    }
+
+    td.editable-cell .cell-value {
+      min-height: 1.5em;
+      display: block;
+    }
+
+    td.editable-cell input.cell-input,
+    td.editable-cell select.cell-input {
+      width: 100%;
+      min-width: 0;
+      margin: -0.1rem 0;
+    }
+
+    .data-entry {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .data-entry h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+      color: var(--text-muted);
+    }
+
+    .entry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1rem 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .entry-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .entry-field label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .entry-field.full-width {
+      grid-column: 1 / -1;
+    }
+    .justification-field textarea {
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .month-amount-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .month-amount-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .month-amount-row .entry-field {
+      margin: 0;
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .month-amount-row .entry-field:first-child {
+      max-width: 160px;
+    }
+
+    .month-amount-row .btn-remove-month {
+      padding: 0.4rem 0.5rem;
+      min-width: auto;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .month-amount-row .btn-remove-month:hover {
+      color: #f85149;
+    }
+
+    .wbs-lines-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .wbs-line-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .wbs-line-row .entry-field {
+      margin: 0;
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .wbs-line-row .entry-field:first-child {
+      max-width: 160px;
+    }
+
+    .wbs-line-row .btn-remove-wbs {
+      padding: 0.4rem 0.5rem;
+      min-width: auto;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .wbs-line-row .btn-remove-wbs:hover {
+      color: #f85149;
+    }
+
+    .entry-actions {
+      margin-top: 0.5rem;
+    }
+
+    .saved-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+      color: var(--text-muted);
+    }
+
+    .grid-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .data-grid-section {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .data-grid-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+      color: var(--text-muted);
+    }
+
+    #dataGridTable {
+      text-align: left;
+    }
+    #dataGridTable th,
+    #dataGridTable td {
+      padding: 0.5rem 0.75rem;
+      vertical-align: top;
+      text-align: left;
+    }
+    #dataGridTable .grid-col-field {
+      font-weight: 600;
+      color: var(--text-muted);
+      min-width: 160px;
+      width: 40%;
+      text-align: left;
+    }
+    #dataGridTable .grid-col-value {
+      min-width: 200px;
+      white-space: normal;
+      word-wrap: break-word;
+      text-align: left;
+    }
+    #dataGridTable tr.entry-separator td {
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 0 0.25rem 0;
+      height: 0.5rem;
+    }
+    #dataGridTable tr.entry-separator td { background: transparent; }
+  </style>
+</head>
+<body>
+  <h1>EFM Tracking Sheet</h1>
+
+  <section class="data-entry">
+    <h2>Data entry</h2>
+    <form id="entryForm">
+      <div class="entry-grid">
+        <div class="entry-field">
+          <label for="ritm">RITM</label>
+          <input type="text" id="ritm" name="ritm" placeholder="RITM number" />
+        </div>
+        <div class="entry-field">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" placeholder="Name" />
+        </div>
+        <div class="entry-field wbs-lines-block" style="grid-column: 1 / -1;">
+          <label>WBS Element / Project PR ID / Total amount</label>
+          <div id="wbsLinesRows" class="wbs-lines-rows"></div>
+          <button type="button" class="btn" id="addWbsLineBtn" style="margin-top: 0.5rem;">+ Add WBS line</button>
+        </div>
+        <div class="entry-field">
+          <label for="vendor">Vendor</label>
+          <input type="text" id="vendor" name="vendor" placeholder="Vendor" />
+        </div>
+        <div class="entry-field">
+          <label for="quarter">Quarter</label>
+          <select id="quarter" name="quarter">
+            <option value="">Select</option>
+            <option value="Q1">Q1</option>
+            <option value="Q2">Q2</option>
+            <option value="Q3">Q3</option>
+            <option value="Q4">Q4</option>
+          </select>
+        </div>
+        <div class="entry-field">
+          <label for="capexOpex">CAPEX or OPEX</label>
+          <select id="capexOpex" name="capexOpex">
+            <option value=""></option>
+            <option value="CAPEX">CAPEX</option>
+            <option value="OPEX">OPEX</option>
+          </select>
+        </div>
+        <div class="entry-field">
+          <label for="totalAmount">Total $ amount</label>
+          <input type="text" id="totalAmount" name="totalAmount" placeholder="$ 0" inputmode="decimal" />
+        </div>
+        <div class="entry-field">
+          <label for="startDate">Start date</label>
+          <input type="date" id="startDate" name="startDate" />
+        </div>
+        <div class="entry-field">
+          <label for="endDate">End date</label>
+          <input type="date" id="endDate" name="endDate" />
+        </div>
+        <div class="entry-field month-amount-block" style="grid-column: 1 / -1;">
+          <label>Month &amp; Monthly $ amount</label>
+          <div id="monthAmountRows" class="month-amount-rows"></div>
+          <button type="button" class="btn" id="addMonthBtn" style="margin-top: 0.5rem;">+ Add month</button>
+        </div>
+        <div class="entry-field">
+          <label><input type="checkbox" name="pullUserStories" /> Pull user stories</label>
+        </div>
+        <div class="entry-field">
+          <label><input type="checkbox" name="vendorSubmission" /> Vendor submission</label>
+        </div>
+        <div class="entry-field">
+          <label><input type="checkbox" name="confirmMonthly" /> Confirm monthly $</label>
+        </div>
+        <div class="entry-field">
+          <label><input type="checkbox" name="submitGrid" /> Submit grid to finance</label>
+        </div>
+        <div class="entry-field">
+          <label><input type="checkbox" name="approvalsFinance" /> Approvals from finance</label>
+        </div>
+        <div class="entry-field">
+          <label for="routineSupportBreakFix">Routine Support Break Fix %</label>
+          <input type="text" id="routineSupportBreakFix" name="routineSupportBreakFix" placeholder="e.g. 25" inputmode="decimal" />
+        </div>
+        <div class="entry-field">
+          <label for="lodgingToolsLiveOps">Lodging Tools Live Ops %</label>
+          <input type="text" id="lodgingToolsLiveOps" name="lodgingToolsLiveOps" placeholder="e.g. 25" inputmode="decimal" />
+        </div>
+        <div class="entry-field">
+          <label for="securityPct">Security %</label>
+          <input type="text" id="securityPct" name="securityPct" placeholder="e.g. 25" inputmode="decimal" />
+        </div>
+        <div class="entry-field">
+          <label for="forecastedInProjectBudget">Forecasted in Project Budget</label>
+          <input type="text" id="forecastedInProjectBudget" name="forecastedInProjectBudget" placeholder="Forecasted in Project Budget" />
+        </div>
+        <div class="entry-field">
+          <label for="director">Director</label>
+          <input type="text" id="director" name="director" placeholder="Director" />
+        </div>
+        <div class="entry-field">
+          <label for="vp">VP</label>
+          <input type="text" id="vp" name="vp" placeholder="VP" />
+        </div>
+        <div class="entry-field">
+          <label for="requestor">Requestor</label>
+          <input type="text" id="requestor" name="requestor" placeholder="Requestor" />
+        </div>
+        <div class="entry-field full-width justification-field">
+          <label for="justification">Justification</label>
+          <textarea id="justification" name="justification" rows="4" placeholder="Enter justification (text will wrap)" style="resize: vertical; min-height: 5rem;"></textarea>
+        </div>
+      </div>
+      <div class="entry-actions">
+        <button type="submit" class="btn btn-primary" id="submitBtn">Save entry</button>
+        <button type="button" class="btn" id="cancelEditBtn" style="display: none;">Cancel</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="saved-section">
+    <div class="grid-toolbar">
+      <h2 style="margin: 0;">Saved entries</h2>
+      <button type="button" class="btn btn-primary" id="generateGridBtn">Generate grid</button>
+    </div>
+    <div class="sheet-wrap">
+      <table id="trackingTable">
+        <thead>
+          <tr>
+            <th class="row-actions" style="min-width: 90px;"></th>
+            <th class="col-check" style="width: 100px;" title="Include in grid">
+              <label class="select-all-label"><input type="checkbox" id="selectAllForGrid" checked /> Include in grid</label>
+            </th>
+            <th class="col-ritm">RITM</th>
+            <th class="col-name">Name</th>
+            <th class="col-wbs">WBS Element</th>
+            <th class="col-project-pr">Project PR ID</th>
+            <th class="col-vendor">Vendor</th>
+            <th class="col-check" title="Pull user stories">Pull user stories</th>
+            <th class="col-check" title="Vendor submission">Vendor submission</th>
+            <th class="col-check" title="Confirm monthly dollar amounts">Confirm monthly $</th>
+            <th class="col-check" title="Submit grid to finance">Submit grid to finance</th>
+            <th class="col-check" title="Approvals from finance">Approvals from finance</th>
+            <th class="col-quarter">Quarter</th>
+            <th class="col-capex-opex">CAPEX or OPEX</th>
+            <th class="col-date">Start date</th>
+            <th class="col-date">End date</th>
+            <th class="col-amount">Total $ amount</th>
+            <th class="col-month">Month</th>
+            <th class="col-monthly-amount">Monthly $ amount</th>
+            <th class="col-routine-support">Routine Support Break Fix %</th>
+            <th class="col-lodging-tools">Lodging Tools Live Ops %</th>
+            <th class="col-security-pct">Security %</th>
+            <th class="col-forecasted-budget">Forecasted in Project Budget</th>
+            <th class="col-director">Director</th>
+            <th class="col-vp">VP</th>
+            <th class="col-requestor">Requestor</th>
+            <th class="col-justification">Justification</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="data-grid-section" id="dataGridSection" style="display: none;">
+    <h2>Data grid</h2>
+    <div class="grid-toolbar">
+      <button type="button" class="btn" id="downloadGridCsvBtn">Download CSV</button>
+      <button type="button" class="btn" id="generateEmailBtn">Generate email</button>
+    </div>
+    <div class="sheet-wrap">
+      <table id="dataGridTable">
+        <thead>
+          <tr>
+            <th class="grid-col-field">Field</th>
+            <th class="grid-col-value">Value</th>
+          </tr>
+        </thead>
+        <tbody id="dataGridBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <script>
+    const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const MONTH_ABBREV = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    const STORAGE_KEY = 'efm-tracking-entries';
+
+    function formatMonthlyAmountCombined(entry) {
+      const lines = getMonthlySectionLines(entry);
+      return lines.length ? lines.join('\n') : '';
+    }
+
+    function getMonthlyBreakdownLines(entry) {
+      const months = ensureMonths(entry).filter(m => m.month || m.monthlyAmount);
+      if (!months.length) return [];
+      const pct = (f) => (parseFloat(String(entry[f] || '').replace(/%/g, '')) || 0) / 100;
+      const rsbfPct = pct('routineSupportBreakFix');
+      const ltlPct = pct('lodgingToolsLiveOps');
+      const secPct = pct('securityPct');
+      const fmt = (n) => isNaN(n) || n === 0 ? '$0' : '$' + Math.round(n).toLocaleString('en-US', { maximumFractionDigits: 0, minimumFractionDigits: 0 });
+      const categories = [
+        { num: 1, label: 'Routine Support Break Fix', pct: rsbfPct, pctVal: entry.routineSupportBreakFix },
+        { num: 2, label: 'Lodging Tools Live Ops', pct: ltlPct, pctVal: entry.lodgingToolsLiveOps },
+        { num: 3, label: 'Security', pct: secPct, pctVal: entry.securityPct }
+      ];
+      const pctStr = (v) => (v == null || v === '') ? '' : String(v).replace(/%/g, '').trim() + '%';
+      const totalFromMonths = months.reduce((s, m) => s + parseAmount(m.monthlyAmount), 0);
+      const originalTotal = parseAmount(entry.totalAmount) || totalFromMonths;
+      const wbsLines = ensureWbsLines(entry);
+      const additionalTotal = wbsLines.slice(3).reduce((s, l) => s + parseAmount(l.totalAmount), 0);
+      const baseTotal = Math.max(0, originalTotal - additionalTotal);
+      const scale = totalFromMonths > 0 ? baseTotal / totalFromMonths : 0;
+      return categories.map(cat => {
+        const lineTotal = Math.round(baseTotal * cat.pct);
+        const perMonth = months.map(m => {
+          const total = parseAmount(m.monthlyAmount);
+          const amount = Math.round(total * scale * cat.pct);
+          return { abbrev: m.month ? MONTH_ABBREV[parseInt(m.month, 10) - 1] || '' : '', amount };
+        }).filter(m => m.abbrev);
+        const monthlyStr = perMonth.map(m => m.abbrev + ' ' + fmt(m.amount)).join(', ');
+        const pctDisplay = pctStr(cat.pctVal);
+        return cat.num + ' - ' + cat.label + (pctDisplay ? ' (' + pctDisplay + ')' : '') + ' - ' + fmt(lineTotal) + (monthlyStr ? ' (' + monthlyStr + ')' : '');
+      });
+    }
+
+    function getMonthlySectionLines(entry) {
+      const months = ensureMonths(entry).filter(m => m.month || m.monthlyAmount);
+      const fmt = (n) => isNaN(n) || n === 0 ? '$0' : '$' + Math.round(n).toLocaleString('en-US', { maximumFractionDigits: 0, minimumFractionDigits: 0 });
+      const totalMonthlyLine = (() => {
+        if (!months.length) return null;
+        const monthlyParts = months.map(m => {
+          const abbrev = m.month ? MONTH_ABBREV[parseInt(m.month, 10) - 1] || '' : '';
+          const num = parseFloat(String(m.monthlyAmount || '').replace(/[^0-9.-]/g, ''));
+          const amount = isNaN(num) ? 0 : num;
+          return abbrev ? abbrev + ' ' + fmt(amount) : null;
+        }).filter(Boolean);
+        if (!monthlyParts.length) return null;
+        const total = months.reduce((s, m) => s + (parseFloat(String(m.monthlyAmount || '').replace(/[^0-9.-]/g, '')) || 0), 0);
+        return '(' + monthlyParts.join(', ') + ') Total ' + fmt(total);
+      })();
+      const breakdownLines = getMonthlyBreakdownLines(entry);
+      if (totalMonthlyLine) return [totalMonthlyLine].concat(breakdownLines);
+      return breakdownLines;
+    }
+
+    function ensureMonths(entry) {
+      if (entry.months && Array.isArray(entry.months)) return entry.months;
+      const month = entry.month || '';
+      const amount = entry.monthlyAmount || '';
+      if (month || amount) return [{ month, monthlyAmount: amount }];
+      return [];
+    }
+
+    function totalAmountMismatch(entry) {
+      const total = parseFloat(String(entry.totalAmount || '').replace(/[^0-9.-]/g, '')) || 0;
+      const months = ensureMonths(entry);
+      const sumMonthly = months.reduce((s, m) => s + (parseFloat(String(m.monthlyAmount || '').replace(/[^0-9.-]/g, '')) || 0), 0);
+      if (total === 0 && sumMonthly === 0) return false;
+      return Math.abs(total - sumMonthly) > 0.01;
+    }
+
+    function updateTotalMismatchHighlight(cellTd, entryIndex) {
+      const row = cellTd.closest('tr');
+      if (!row) return;
+      const totalCell = row.querySelector('td.col-amount');
+      if (!totalCell) return;
+      const entries = getEntries();
+      const entry = entries[entryIndex];
+      if (entry && totalAmountMismatch(entry)) totalCell.classList.add('amount-mismatch');
+      else totalCell.classList.remove('amount-mismatch');
+    }
+
+    function createMonthAmountRow(value, canRemove) {
+      const row = document.createElement('div');
+      row.className = 'month-amount-row';
+      const monthId = 'month_' + Math.random().toString(36).slice(2, 9);
+      const amountId = 'monthlyAmount_' + Math.random().toString(36).slice(2, 9);
+      row.innerHTML = `
+        <div class="entry-field">
+          <label for="${monthId}">Month</label>
+          <select id="${monthId}" class="month-select">
+            <option value="">Select</option>
+            ${MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('')}
+          </select>
+        </div>
+        <div class="entry-field">
+          <label for="${amountId}">Monthly $ amount</label>
+          <input type="text" id="${amountId}" class="monthly-amount-input" placeholder="$ 0" inputmode="decimal" />
+        </div>
+      `;
+      const monthSelect = row.querySelector('.month-select');
+      const amountInput = row.querySelector('.monthly-amount-input');
+      monthSelect.value = value ? value.month : '';
+      amountInput.value = value && value.monthlyAmount ? formatUSD(value.monthlyAmount) : '';
+      amountInput.addEventListener('focus', function() { this.value = parseUSD(this.value); });
+      amountInput.addEventListener('blur', function() {
+        const formatted = formatUSD(this.value);
+        if (formatted) this.value = formatted;
+      });
+      if (canRemove) {
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn btn-remove-month';
+        removeBtn.textContent = 'Remove';
+        removeBtn.addEventListener('click', () => {
+          row.remove();
+        });
+        row.appendChild(removeBtn);
+      }
+      return row;
+    }
+
+    function renderMonthAmountRows(container, monthsArray) {
+      container.innerHTML = '';
+      const list = Array.isArray(monthsArray) && monthsArray.length ? monthsArray : [{ month: '', monthlyAmount: '' }];
+      list.forEach((val, i) => {
+        container.appendChild(createMonthAmountRow(val, i > 0));
+      });
+    }
+
+    function getMonthAmountsFromForm() {
+      const container = document.getElementById('monthAmountRows');
+      const rows = container.querySelectorAll('.month-amount-row');
+      const months = [];
+      rows.forEach(row => {
+        const month = row.querySelector('.month-select').value;
+        const amount = row.querySelector('.monthly-amount-input').value;
+        const rawAmount = parseUSD(amount);
+        if (month || rawAmount) months.push({ month, monthlyAmount: rawAmount });
+      });
+      return months.length ? months : [{ month: '', monthlyAmount: '' }];
+    }
+
+    function ensureWbsLines(entry) {
+      if (entry.wbsLines && Array.isArray(entry.wbsLines) && entry.wbsLines.length) return entry.wbsLines;
+      const wbs = entry.wbsElement || '';
+      const pr = entry.projectPrId || '';
+      const total = entry.totalAmount || '';
+      if (wbs || pr || total) return [{ wbsElement: wbs, projectPrId: pr, totalAmount: total }];
+      return [];
+    }
+
+    function createWbsLineRow(value, canRemove) {
+      const row = document.createElement('div');
+      row.className = 'wbs-line-row';
+      const wbsId = 'wbs_' + Math.random().toString(36).slice(2, 9);
+      const prId = 'pr_' + Math.random().toString(36).slice(2, 9);
+      const totalId = 'wbsTotal_' + Math.random().toString(36).slice(2, 9);
+      row.innerHTML = `
+        <div class="entry-field">
+          <label for="${wbsId}">WBS Element</label>
+          <input type="text" id="${wbsId}" class="wbs-element-input" placeholder="WBS Element" />
+        </div>
+        <div class="entry-field">
+          <label for="${prId}">Project PR ID</label>
+          <input type="text" id="${prId}" class="project-pr-input" placeholder="Project PR ID" />
+        </div>
+        <div class="entry-field">
+          <label for="${totalId}">Total amount</label>
+          <input type="text" id="${totalId}" class="wbs-total-input" placeholder="$ 0" inputmode="decimal" />
+        </div>
+      `;
+      const wbsInput = row.querySelector('.wbs-element-input');
+      const prInput = row.querySelector('.project-pr-input');
+      const totalInput = row.querySelector('.wbs-total-input');
+      wbsInput.value = value ? value.wbsElement || '' : '';
+      prInput.value = value ? value.projectPrId || '' : '';
+      totalInput.value = value && value.totalAmount ? formatUSD(value.totalAmount) : '';
+      totalInput.addEventListener('focus', function() { this.value = parseUSD(this.value); });
+      totalInput.addEventListener('blur', function() {
+        const formatted = formatUSD(this.value);
+        if (formatted) this.value = formatted;
+      });
+      if (canRemove) {
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn btn-remove-wbs';
+        removeBtn.textContent = 'Remove';
+        removeBtn.addEventListener('click', () => row.remove());
+        row.appendChild(removeBtn);
+      }
+      return row;
+    }
+
+    function renderWbsLinesRows(container, linesArray) {
+      container.innerHTML = '';
+      const list = Array.isArray(linesArray) && linesArray.length ? linesArray : [{ wbsElement: '', projectPrId: '', totalAmount: '' }];
+      list.forEach((val, i) => container.appendChild(createWbsLineRow(val, i > 0)));
+    }
+
+    function getWbsLinesFromForm() {
+      const container = document.getElementById('wbsLinesRows');
+      const rows = container.querySelectorAll('.wbs-line-row');
+      const lines = [];
+      rows.forEach(row => {
+        const wbs = row.querySelector('.wbs-element-input').value.trim();
+        const pr = row.querySelector('.project-pr-input').value.trim();
+        const total = parseUSD(row.querySelector('.wbs-total-input').value);
+        if (wbs || pr || total) lines.push({ wbsElement: wbs, projectPrId: pr, totalAmount: total });
+      });
+      return lines.length ? lines : [{ wbsElement: '', projectPrId: '', totalAmount: '' }];
+    }
+
+    function formatUSD(value) {
+      const num = parseFloat(String(value).replace(/[^0-9.-]/g, ''));
+      if (isNaN(num)) return '';
+      return '$ ' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function parseUSD(value) {
+      const stripped = String(value).replace(/[^0-9.-]/g, '');
+      const num = parseFloat(stripped);
+      return isNaN(num) ? '' : stripped;
+    }
+
+    function parseAmount(value) {
+      const n = parseFloat(String(value).replace(/[^0-9.-]/g, ''));
+      return isNaN(n) ? 0 : n;
+    }
+
+    function getEntries() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function setEntries(entries) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    function getFormData() {
+      const form = document.getElementById('entryForm');
+      const totalRaw = parseUSD(form.totalAmount.value);
+      const months = getMonthAmountsFromForm();
+      return {
+        ritm: form.ritm.value.trim(),
+        name: form.name.value.trim(),
+        wbsLines: getWbsLinesFromForm().filter(l => l.wbsElement || l.projectPrId || l.totalAmount),
+        vendor: form.vendor.value.trim(),
+        routineSupportBreakFix: form.routineSupportBreakFix.value.trim().replace(/%/g, ''),
+        lodgingToolsLiveOps: form.lodgingToolsLiveOps.value.trim().replace(/%/g, ''),
+        securityPct: form.securityPct.value.trim().replace(/%/g, ''),
+        forecastedInProjectBudget: form.forecastedInProjectBudget.value.trim(),
+        director: form.director.value.trim(),
+        vp: form.vp.value.trim(),
+        requestor: form.requestor.value.trim(),
+        justification: form.justification.value.trim(),
+        pullUserStories: form.pullUserStories.checked,
+        vendorSubmission: form.vendorSubmission.checked,
+        confirmMonthly: form.confirmMonthly.checked,
+        submitGrid: form.submitGrid.checked,
+        approvalsFinance: form.approvalsFinance.checked,
+        quarter: form.quarter.value,
+        capexOpex: form.capexOpex.value || '',
+        startDate: form.startDate.value || '',
+        endDate: form.endDate.value || '',
+        totalAmount: totalRaw,
+        months: months.filter(m => m.month || m.monthlyAmount)
+      };
+    }
+
+    function clearForm() {
+      const form = document.getElementById('entryForm');
+      form.ritm.value = '';
+      form.name.value = '';
+      renderWbsLinesRows(document.getElementById('wbsLinesRows'), [{ wbsElement: '', projectPrId: '', totalAmount: '' }]);
+      form.vendor.value = '';
+      form.routineSupportBreakFix.value = '';
+      form.lodgingToolsLiveOps.value = '';
+      form.securityPct.value = '';
+      form.forecastedInProjectBudget.value = '';
+      form.director.value = '';
+      form.vp.value = '';
+      form.requestor.value = '';
+      form.justification.value = '';
+      form.quarter.value = '';
+      form.capexOpex.value = '';
+      form.startDate.value = '';
+      form.endDate.value = '';
+      form.totalAmount.value = '';
+      form.pullUserStories.checked = false;
+      form.vendorSubmission.checked = false;
+      form.confirmMonthly.checked = false;
+      form.submitGrid.checked = false;
+      form.approvalsFinance.checked = false;
+      renderMonthAmountRows(document.getElementById('monthAmountRows'), [{ month: '', monthlyAmount: '' }]);
+    }
+
+    let editingIndex = -1;
+
+    function loadEntryIntoForm(entry, index) {
+      const form = document.getElementById('entryForm');
+      form.ritm.value = entry.ritm || '';
+      form.name.value = entry.name || '';
+      const wbsLines = ensureWbsLines(entry);
+      renderWbsLinesRows(document.getElementById('wbsLinesRows'), wbsLines.length ? wbsLines : [{ wbsElement: '', projectPrId: '', totalAmount: '' }]);
+      form.vendor.value = entry.vendor || '';
+      form.routineSupportBreakFix.value = entry.routineSupportBreakFix || '';
+      form.lodgingToolsLiveOps.value = entry.lodgingToolsLiveOps || '';
+      form.securityPct.value = entry.securityPct || '';
+      form.forecastedInProjectBudget.value = entry.forecastedInProjectBudget || '';
+      form.director.value = entry.director || '';
+      form.vp.value = entry.vp || '';
+      form.requestor.value = entry.requestor || '';
+      form.justification.value = entry.justification || '';
+      form.quarter.value = entry.quarter || '';
+      form.capexOpex.value = entry.capexOpex || '';
+      form.startDate.value = entry.startDate || '';
+      form.endDate.value = entry.endDate || '';
+      form.totalAmount.value = entry.totalAmount ? formatUSD(entry.totalAmount) : '';
+      form.pullUserStories.checked = !!entry.pullUserStories;
+      form.vendorSubmission.checked = !!entry.vendorSubmission;
+      form.confirmMonthly.checked = !!entry.confirmMonthly;
+      form.submitGrid.checked = !!entry.submitGrid;
+      form.approvalsFinance.checked = !!entry.approvalsFinance;
+      const months = ensureMonths(entry);
+      renderMonthAmountRows(document.getElementById('monthAmountRows'), months.length ? months : [{ month: '', monthlyAmount: '' }]);
+      editingIndex = index;
+      document.getElementById('submitBtn').textContent = 'Update entry';
+      document.getElementById('cancelEditBtn').style.display = 'inline-block';
+    }
+
+    function exitEditMode() {
+      editingIndex = -1;
+      document.getElementById('submitBtn').textContent = 'Save entry';
+      document.getElementById('cancelEditBtn').style.display = 'none';
+      clearForm();
+    }
+
+    function getDisplayValue(entry, field) {
+      switch (field) {
+        case 'ritm': return entry.ritm || '';
+        case 'name': return entry.name || '';
+        case 'wbsElement': {
+          const lines = ensureWbsLines(entry);
+          return lines.map(l => l.wbsElement || '').filter(Boolean).join('; ') || '';
+        }
+        case 'projectPrId': {
+          const lines = ensureWbsLines(entry);
+          return lines.map(l => l.projectPrId || '').filter(Boolean).join('; ') || '';
+        }
+        case 'wbsLineTotals': {
+          const lines = ensureWbsLines(entry);
+          return lines.map(l => l.totalAmount ? formatUSD(l.totalAmount) : '').filter(Boolean).join('; ') || '';
+        }
+        case 'vendor': return entry.vendor || '';
+        case 'routineSupportBreakFix': {
+          const v = String(entry.routineSupportBreakFix || '').replace(/%/g, '').trim();
+          return v ? v + '%' : '';
+        }
+        case 'lodgingToolsLiveOps': {
+          const v = String(entry.lodgingToolsLiveOps || '').replace(/%/g, '').trim();
+          return v ? v + '%' : '';
+        }
+        case 'securityPct': {
+          const v = String(entry.securityPct || '').replace(/%/g, '').trim();
+          return v ? v + '%' : '';
+        }
+        case 'forecastedInProjectBudget': return entry.forecastedInProjectBudget || '';
+        case 'director': return entry.director || '';
+        case 'vp': return entry.vp || '';
+        case 'requestor': return entry.requestor || '';
+        case 'justification': return entry.justification || '';
+        case 'quarter': return entry.quarter || '';
+        case 'capexOpex': return entry.capexOpex || '';
+        case 'startDate': return entry.startDate || '';
+        case 'endDate': return entry.endDate || '';
+        case 'month': {
+          const months = ensureMonths(entry);
+          return months.map(m => m.month ? MONTHS[parseInt(m.month, 10) - 1] : '').filter(Boolean).join(', ') || '';
+        }
+        case 'totalAmount': return entry.totalAmount ? formatUSD(entry.totalAmount) : '';
+        case 'monthlyAmount': {
+          const months = ensureMonths(entry);
+          return months.map(m => m.monthlyAmount ? formatUSD(m.monthlyAmount) : '').filter(Boolean).join('; ') || '';
+        }
+        case 'monthlyAmountCombined': return formatMonthlyAmountCombined(entry);
+        default: return '';
+      }
+    }
+
+    function getRawValue(entry, field) {
+      switch (field) {
+        case 'ritm': return entry.ritm || '';
+        case 'name': return entry.name || '';
+        case 'wbsElement': {
+          const lines = ensureWbsLines(entry);
+          return lines.length ? (lines[0].wbsElement || '') : '';
+        }
+        case 'projectPrId': {
+          const lines = ensureWbsLines(entry);
+          return lines.length ? (lines[0].projectPrId || '') : '';
+        }
+        case 'vendor': return entry.vendor || '';
+        case 'routineSupportBreakFix': return String(entry.routineSupportBreakFix || '').replace(/%/g, '').trim();
+        case 'lodgingToolsLiveOps': return String(entry.lodgingToolsLiveOps || '').replace(/%/g, '').trim();
+        case 'securityPct': return String(entry.securityPct || '').replace(/%/g, '').trim();
+        case 'forecastedInProjectBudget': return entry.forecastedInProjectBudget || '';
+        case 'director': return entry.director || '';
+        case 'vp': return entry.vp || '';
+        case 'requestor': return entry.requestor || '';
+        case 'justification': return entry.justification || '';
+        case 'quarter': return entry.quarter || '';
+        case 'capexOpex': return entry.capexOpex || '';
+        case 'startDate': return entry.startDate || '';
+        case 'endDate': return entry.endDate || '';
+        case 'month': {
+          const months = ensureMonths(entry);
+          return months.length ? months[0].month : '';
+        }
+        case 'totalAmount': return entry.totalAmount || '';
+        case 'monthlyAmount': {
+          const months = ensureMonths(entry);
+          return months.length ? (months[0].monthlyAmount || '') : '';
+        }
+        default: return '';
+      }
+    }
+
+    function makeEditableCell(entry, index, field, cellClass) {
+      const td = document.createElement('td');
+      td.className = cellClass + ' editable-cell';
+      td.dataset.entryIndex = String(index);
+      td.dataset.field = field;
+      const span = document.createElement('span');
+      span.className = 'cell-value';
+      span.textContent = getDisplayValue(entry, field);
+      td.appendChild(span);
+
+      td.addEventListener('click', function startEdit(e) {
+        if (td.querySelector('.cell-input')) return;
+        e.stopPropagation();
+        const entries = getEntries();
+        const entry = entries[index];
+        const raw = getRawValue(entry, field);
+
+        let input;
+        if (field === 'quarter') {
+          input = document.createElement('select');
+          input.className = 'cell-input';
+          ['', 'Q1', 'Q2', 'Q3', 'Q4'].forEach(q => {
+            const opt = document.createElement('option');
+            opt.value = q;
+            opt.textContent = q || 'Select';
+            input.appendChild(opt);
+          });
+          input.value = raw;
+        } else if (field === 'capexOpex') {
+          input = document.createElement('select');
+          input.className = 'cell-input';
+          ['', 'CAPEX', 'OPEX'].forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v;
+            opt.textContent = v || '';
+            input.appendChild(opt);
+          });
+          input.value = raw || '';
+        } else if (field === 'month') {
+          const months = ensureMonths(entry);
+          const firstMonth = months.length ? months[0].month : '';
+          input = document.createElement('select');
+          input.className = 'cell-input';
+          const opts = [{ value: '', text: 'Select' }];
+          MONTHS.forEach((m, i) => opts.push({ value: String(i + 1), text: m }));
+          opts.forEach(({ value, text }) => {
+            const opt = document.createElement('option');
+            opt.value = value;
+            opt.textContent = text;
+            input.appendChild(opt);
+          });
+          input.value = firstMonth || raw;
+        } else if (field === 'monthlyAmount') {
+          const months = ensureMonths(entry);
+          const firstAmount = months.length ? (months[0].monthlyAmount || '') : raw;
+          input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'cell-input';
+          input.inputMode = 'decimal';
+          input.value = firstAmount ? formatUSD(firstAmount) : '';
+        } else if (field === 'startDate' || field === 'endDate') {
+          input = document.createElement('input');
+          input.type = 'date';
+          input.className = 'cell-input';
+          input.value = raw || '';
+        } else if (field === 'justification') {
+          input = document.createElement('textarea');
+          input.className = 'cell-input cell-input-textarea';
+          input.rows = 3;
+          input.value = raw || '';
+          input.style.whiteSpace = 'pre-wrap';
+          input.style.wordWrap = 'break-word';
+        } else {
+          input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'cell-input';
+          input.value = field === 'totalAmount' ? (raw ? formatUSD(raw) : '') : raw;
+          if (field === 'totalAmount') input.inputMode = 'decimal';
+        }
+
+        function saveAndClose() {
+          let val;
+          if (field === 'totalAmount' || field === 'monthlyAmount') {
+            val = parseUSD(input.value);
+          } else if (field === 'startDate' || field === 'endDate') {
+            val = input.value || '';
+          } else if (field === 'justification' || (input.tagName && input.tagName.toLowerCase() === 'textarea')) {
+            val = input.value.trim();
+          } else {
+            val = input.type === 'text' ? input.value.trim() : input.value;
+          }
+          const entries = getEntries();
+          if (entries[index]) {
+            if (field === 'month' || field === 'monthlyAmount') {
+              const months = ensureMonths(entries[index]);
+              if (!months.length) months.push({ month: '', monthlyAmount: '' });
+              if (field === 'month') months[0].month = val;
+              else months[0].monthlyAmount = val;
+              entries[index].months = months;
+            } else if (field === 'wbsElement' || field === 'projectPrId') {
+              const lines = ensureWbsLines(entries[index]);
+              if (!lines.length) lines.push({ wbsElement: '', projectPrId: '', totalAmount: '' });
+              if (field === 'wbsElement') lines[0].wbsElement = val;
+              else lines[0].projectPrId = val;
+              entries[index].wbsLines = lines;
+            } else {
+              if (field === 'routineSupportBreakFix' || field === 'lodgingToolsLiveOps' || field === 'securityPct') val = String(val).replace(/%/g, '').trim();
+              entries[index][field] = val;
+            }
+            setEntries(entries);
+          }
+          updateTotalMismatchHighlight(td, index);
+          restoreCell();
+        }
+
+        function restoreCell(cancel) {
+          const entries = getEntries();
+          const data = cancel ? entry : (entries[index] || entry);
+          td.innerHTML = '';
+          const newSpan = document.createElement('span');
+          newSpan.className = 'cell-value';
+          newSpan.textContent = getDisplayValue(data, field);
+          td.appendChild(newSpan);
+          td.addEventListener('click', startEdit);
+        }
+
+        input.addEventListener('blur', () => saveAndClose());
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { input.blur(); e.preventDefault(); }
+          if (e.key === 'Escape') { restoreCell(true); e.preventDefault(); }
+        });
+
+        td.innerHTML = '';
+        td.appendChild(input);
+        td.removeEventListener('click', startEdit);
+        input.focus();
+        if (field === 'totalAmount' || field === 'monthlyAmount') input.select();
+      });
+
+      return td;
+    }
+
+    function renderSavedRows() {
+      const entries = getEntries();
+      const tbody = document.getElementById('tbody');
+      tbody.innerHTML = '';
+      entries.forEach((entry, index) => {
+        const tr = document.createElement('tr');
+        tr.dataset.entryIndex = String(index);
+
+        const actionsTd = document.createElement('td');
+        actionsTd.className = 'row-actions';
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'btn btn-row-edit';
+        editBtn.title = 'Edit in form (add months, etc.)';
+        editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', () => {
+          loadEntryIntoForm(entry, index);
+          document.querySelector('.data-entry').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'btn btn-row-del';
+        delBtn.title = 'Remove entry';
+        delBtn.textContent = '×';
+        delBtn.addEventListener('click', () => {
+          const list = getEntries();
+          list.splice(index, 1);
+          setEntries(list);
+          renderSavedRows();
+          exitEditMode();
+        });
+        actionsTd.appendChild(editBtn);
+        actionsTd.appendChild(delBtn);
+        tr.appendChild(actionsTd);
+
+        const includeTd = document.createElement('td');
+        includeTd.className = 'col-check';
+        const includeCb = document.createElement('input');
+        includeCb.type = 'checkbox';
+        includeCb.className = 'include-in-grid-cb';
+        includeCb.checked = true;
+        includeCb.title = 'Include in grid';
+        includeTd.appendChild(includeCb);
+        tr.appendChild(includeTd);
+
+        tr.appendChild(makeEditableCell(entry, index, 'ritm', 'col-ritm'));
+        tr.appendChild(makeEditableCell(entry, index, 'name', 'col-name'));
+        tr.appendChild(makeEditableCell(entry, index, 'wbsElement', 'col-wbs'));
+        tr.appendChild(makeEditableCell(entry, index, 'projectPrId', 'col-project-pr'));
+        tr.appendChild(makeEditableCell(entry, index, 'vendor', 'col-vendor'));
+
+        const checkFields = ['pullUserStories', 'vendorSubmission', 'confirmMonthly', 'submitGrid', 'approvalsFinance'];
+        checkFields.forEach(f => {
+          const td = document.createElement('td');
+          td.className = 'col-check';
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.checked = !!entry[f];
+          cb.addEventListener('change', () => {
+            const list = getEntries();
+            if (list[index]) {
+              list[index][f] = cb.checked;
+              setEntries(list);
+            }
+          });
+          td.appendChild(cb);
+          tr.appendChild(td);
+        });
+
+        tr.appendChild(makeEditableCell(entry, index, 'quarter', 'col-quarter'));
+        tr.appendChild(makeEditableCell(entry, index, 'capexOpex', 'col-capex-opex'));
+        tr.appendChild(makeEditableCell(entry, index, 'startDate', 'col-date'));
+        tr.appendChild(makeEditableCell(entry, index, 'endDate', 'col-date'));
+        const totalTd = makeEditableCell(entry, index, 'totalAmount', 'col-amount');
+        if (totalAmountMismatch(entry)) totalTd.classList.add('amount-mismatch');
+        tr.appendChild(totalTd);
+        tr.appendChild(makeEditableCell(entry, index, 'month', 'col-month'));
+        tr.appendChild(makeEditableCell(entry, index, 'monthlyAmount', 'col-monthly-amount'));
+        tr.appendChild(makeEditableCell(entry, index, 'routineSupportBreakFix', 'col-routine-support'));
+        tr.appendChild(makeEditableCell(entry, index, 'lodgingToolsLiveOps', 'col-lodging-tools'));
+        tr.appendChild(makeEditableCell(entry, index, 'securityPct', 'col-security-pct'));
+        tr.appendChild(makeEditableCell(entry, index, 'forecastedInProjectBudget', 'col-forecasted-budget'));
+        tr.appendChild(makeEditableCell(entry, index, 'director', 'col-director'));
+        tr.appendChild(makeEditableCell(entry, index, 'vp', 'col-vp'));
+        tr.appendChild(makeEditableCell(entry, index, 'requestor', 'col-requestor'));
+        tr.appendChild(makeEditableCell(entry, index, 'justification', 'col-justification'));
+
+        tbody.appendChild(tr);
+      });
+      const selectAll = document.getElementById('selectAllForGrid');
+      if (selectAll) selectAll.checked = true;
+    }
+
+    function escapeHtml(str) {
+      if (str == null) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    const DATA_GRID_FIELDS = ['vendor', 'totalAmount', 'monthlyAmountCombined', 'startDate', 'endDate', 'capexOpex', 'projectPrId', 'ritm', 'name', 'wbsElement', 'wbsLineTotals', 'quarter', 'routineSupportBreakFix', 'lodgingToolsLiveOps', 'securityPct', 'forecastedInProjectBudget', 'director', 'vp', 'requestor', 'justification'];
+    const DATA_GRID_LABELS = ['Vendor', 'Total $ amount', 'Monthly $ amount', 'Start date', 'End date', 'CAPEX or OPEX', 'Project PR ID', 'RITM', 'Name', 'WBS Element', 'WBS line totals', 'Quarter', 'Routine Support Break Fix %', 'Lodging Tools Live Ops %', 'Security %', 'Forecasted in Project Budget', 'Director', 'VP', 'Requestor', 'Justification'];
+
+    function getSelectedEntriesForGrid() {
+      const entries = getEntries();
+      const tbody = document.getElementById('tbody');
+      const selected = [];
+      tbody.querySelectorAll('tr').forEach(tr => {
+        const idx = parseInt(tr.dataset.entryIndex, 10);
+        const cb = tr.querySelector('.include-in-grid-cb');
+        if (cb && cb.checked && !isNaN(idx) && entries[idx]) selected.push(entries[idx]);
+      });
+      return selected;
+    }
+
+    function buildDataGrid() {
+      const selected = getSelectedEntriesForGrid();
+      const tbody = document.getElementById('dataGridBody');
+      tbody.innerHTML = '';
+      selected.forEach((entry, i) => {
+        DATA_GRID_FIELDS.forEach((field, j) => {
+          if (field === 'monthlyAmountCombined') {
+            const lines = getMonthlySectionLines(entry);
+            lines.forEach((lineText, k) => {
+              const tr = document.createElement('tr');
+              const tdLabel = document.createElement('td');
+              tdLabel.className = 'grid-col-field';
+              tdLabel.textContent = k === 0 ? DATA_GRID_LABELS[j] : '';
+              const tdValue = document.createElement('td');
+              tdValue.className = 'grid-col-value';
+              tdValue.textContent = lineText;
+              tr.appendChild(tdLabel);
+              tr.appendChild(tdValue);
+              tbody.appendChild(tr);
+            });
+            if (lines.length === 0) {
+              const tr = document.createElement('tr');
+              tr.innerHTML = '<td class="grid-col-field">' + DATA_GRID_LABELS[j] + '</td><td class="grid-col-value"></td>';
+              tbody.appendChild(tr);
+            }
+          } else {
+            const tr = document.createElement('tr');
+            const tdLabel = document.createElement('td');
+            tdLabel.className = 'grid-col-field';
+            tdLabel.textContent = DATA_GRID_LABELS[j];
+            const tdValue = document.createElement('td');
+            tdValue.className = 'grid-col-value';
+            tdValue.textContent = getDisplayValue(entry, field);
+            tr.appendChild(tdLabel);
+            tr.appendChild(tdValue);
+            tbody.appendChild(tr);
+          }
+        });
+        if (i < selected.length - 1) {
+          const sep = document.createElement('tr');
+          sep.className = 'entry-separator';
+          sep.innerHTML = '<td colspan="2"></td>';
+          tbody.appendChild(sep);
+        }
+      });
+    }
+
+    function downloadGridCsv() {
+      const selected = getSelectedEntriesForGrid();
+      const wrapCsvCell = (v, maxLen) => {
+        let s = String(v == null ? '' : v);
+        s = s.replace(/(\r?\n)([\s]*\r?\n)+/g, '\r\n').replace(/\r?\n/g, '\r\n');
+        if (!s || s.length <= (maxLen || 80)) return s;
+        const limit = maxLen || 80;
+        const parts = [];
+        let rest = s;
+        while (rest.length > limit) {
+          let split = rest.slice(0, limit);
+          const lastSpace = split.lastIndexOf(' ');
+          if (lastSpace > limit * 0.5) split = split.slice(0, lastSpace + 1);
+          parts.push(split.trimEnd());
+          rest = rest.slice(split.length).replace(/^\s+/, '');
+        }
+        if (rest) parts.push(rest.trimEnd());
+        return parts.join('\r\n');
+      };
+      const escapeCsv = (v) => {
+        const s = String(v == null ? '' : v);
+        if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+        return s;
+      };
+      const rows = [['Field', 'Value']];
+      selected.forEach((entry, i) => {
+        DATA_GRID_FIELDS.forEach((field, j) => {
+          if (field === 'monthlyAmountCombined') {
+            const lines = getMonthlySectionLines(entry);
+            lines.forEach((lineText, k) => {
+              rows.push([wrapCsvCell(k === 0 ? DATA_GRID_LABELS[j] : ''), wrapCsvCell(lineText)]);
+            });
+            if (lines.length === 0) rows.push([wrapCsvCell(DATA_GRID_LABELS[j]), '']);
+          } else {
+            rows.push([wrapCsvCell(DATA_GRID_LABELS[j]), wrapCsvCell(getDisplayValue(entry, field))]);
+          }
+        });
+        if (i < selected.length - 1) rows.push(['', '']);
+      });
+      const csv = rows.map(row => row.map(escapeCsv).join(',')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'efm-tracking-grid.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function buildEmailGridPlainText(selected) {
+      const colGap = '  │  ';
+      const blocks = [];
+
+      selected.forEach((entry, entryIdx) => {
+        const rows = [];
+        DATA_GRID_FIELDS.forEach((field, j) => {
+          if (field === 'monthlyAmountCombined') {
+            const sectionLines = getMonthlySectionLines(entry);
+            sectionLines.forEach((lineText, k) => {
+              rows.push({
+                label: k === 0 ? DATA_GRID_LABELS[j] : '',
+                value: lineText == null ? '' : String(lineText)
+              });
+            });
+            if (sectionLines.length === 0) {
+              rows.push({ label: DATA_GRID_LABELS[j], value: '' });
+            }
+          } else {
+            rows.push({
+              label: DATA_GRID_LABELS[j],
+              value: getDisplayValue(entry, field) == null ? '' : String(getDisplayValue(entry, field))
+            });
+          }
+        });
+
+        const maxLabelW = Math.min(
+          Math.max(5, ...rows.map(r => (r.label || '').length)),
+          44
+        );
+        const padLabel = (s) => {
+          const t = String(s || '');
+          return t.length > maxLabelW ? t.slice(0, maxLabelW - 1) + '…' : t.padEnd(maxLabelW);
+        };
+
+        let maxRowLen = maxLabelW + colGap.length + 6;
+        rows.forEach(r => {
+          const raw = (r.value || '').replace(/\r\n/g, '\n');
+          const valueLines = raw.length ? raw.split('\n') : [''];
+          valueLines.forEach(vl => {
+            maxRowLen = Math.max(maxRowLen, maxLabelW + colGap.length + vl.length);
+          });
+        });
+        const lineLen = Math.max(78, Math.min(maxRowLen, 200));
+        const thinLine = '─'.repeat(lineLen);
+        const thickLine = '═'.repeat(lineLen);
+
+        const gridLines = [
+          thinLine,
+          padLabel('Field') + colGap + 'Value',
+          thinLine
+        ];
+        rows.forEach(r => {
+          const raw = (r.value || '').replace(/\r\n/g, '\n');
+          const valueLines = raw.length ? raw.split('\n') : [''];
+          valueLines.forEach((vl, vi) => {
+            gridLines.push(padLabel(vi === 0 ? r.label : '') + colGap + vl);
+          });
+        });
+        gridLines.push(thinLine);
+
+        blocks.push(gridLines.join('\n'));
+        if (entryIdx < selected.length - 1) {
+          blocks.push('', thickLine, thickLine, '');
+        }
+      });
+
+      return blocks.join('\n');
+    }
+
+    function emailValueToHtml(text) {
+      const s = String(text == null ? '' : text);
+      const esc = escapeHtml(s);
+      return esc.replace(/\r\n/g, '\n').replace(/\n/g, '<br>');
+    }
+
+    function buildEmailGridHtml(selected) {
+      const tdLabel =
+        'border:1px solid #000;background:#d9d9d9;font-weight:bold;padding:6px 8px;vertical-align:top;width:25%;font-family:Calibri,Arial,sans-serif;font-size:14px;line-height:1.2;';
+      const tdValue =
+        'border:1px solid #000;background:#ffffff;padding:6px 8px;vertical-align:top;width:75%;font-family:Calibri,Arial,sans-serif;font-size:14px;line-height:1.2;word-wrap:break-word;';
+      const tableStyle =
+        'border-collapse:collapse;width:100%;max-width:920px;table-layout:fixed;margin:0 0 20px 0;font-family:Calibri,Arial,sans-serif;font-size:14px;';
+      const sepRow =
+        '<tr><td colspan="2" style="border:1px solid #000;background:#bfbfbf;padding:4px 8px;height:6px;line-height:0;font-size:0;">&nbsp;</td></tr>';
+
+      const parts = [];
+      selected.forEach((entry, entryIdx) => {
+        parts.push('<table role="presentation" cellpadding="0" cellspacing="0" style="' + tableStyle + '">');
+        DATA_GRID_FIELDS.forEach((field, j) => {
+          if (field === 'monthlyAmountCombined') {
+            const sectionLines = getMonthlySectionLines(entry);
+            sectionLines.forEach((lineText, k) => {
+              const label = k === 0 ? DATA_GRID_LABELS[j] : '';
+              const val = lineText == null ? '' : String(lineText);
+              const valHtml = val.trim() ? emailValueToHtml(val) : '&nbsp;';
+              parts.push(
+                '<tr><td style="' +
+                  tdLabel +
+                  '">' +
+                  (label ? escapeHtml(label) : '&nbsp;') +
+                  '</td><td style="' +
+                  tdValue +
+                  '">' +
+                  valHtml +
+                  '</td></tr>'
+              );
+            });
+            if (sectionLines.length === 0) {
+              parts.push(
+                '<tr><td style="' +
+                  tdLabel +
+                  '">' +
+                  escapeHtml(DATA_GRID_LABELS[j]) +
+                  '</td><td style="' +
+                  tdValue +
+                  '">&nbsp;</td></tr>'
+              );
+            }
+          } else {
+            const val = getDisplayValue(entry, field);
+            const valStr = val == null ? '' : String(val);
+            const valHtml = valStr.trim() ? emailValueToHtml(valStr) : '&nbsp;';
+            parts.push(
+              '<tr><td style="' +
+                tdLabel +
+                '">' +
+                escapeHtml(DATA_GRID_LABELS[j]) +
+                '</td><td style="' +
+                tdValue +
+                '">' +
+                valHtml +
+                '</td></tr>'
+            );
+          }
+        });
+        parts.push('</table>');
+        if (entryIdx < selected.length - 1) {
+          parts.push('<table role="presentation" cellpadding="0" cellspacing="0" style="' + tableStyle + '">' + sepRow + '</table>');
+        }
+      });
+      return parts.join('');
+    }
+
+    function generateEmail() {
+      const selected = getSelectedEntriesForGrid();
+      if (!selected.length) return;
+
+      const namePart = selected.map(e => String(e.name || '').trim()).filter(Boolean).join('; ') || '';
+      const ritmPart = selected.map(e => String(e.ritm || '').trim()).filter(Boolean).join('; ') || '';
+      const subject = 'EFM Approval Grid | ' + namePart + ' | ' + ritmPart;
+      const subjectEnc = encodeURIComponent(subject);
+
+      const plainBody = buildEmailGridPlainText(selected).replace(/\n/g, '\r\n');
+      const htmlFragment = buildEmailGridHtml(selected);
+      const htmlFull =
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:12px;">' +
+        htmlFragment +
+        '</body></html>';
+
+      const pasteInstruction =
+        'The formatted data grid table has been copied to your clipboard.\r\n\r\n' +
+        '1. Click in the email message body below.\r\n' +
+        '2. Press Ctrl+V (Windows) or Cmd+V (Mac) to paste the table.\r\n\r\n' +
+        '(Outlook will show gray label cells, white value cells, and borders like the on-screen grid.)';
+
+      const outlookOfficeCompose = (bodyText) =>
+        'https://outlook.office.com/mail/deeplink/compose?subject=' +
+        subjectEnc +
+        '&body=' +
+        encodeURIComponent(bodyText == null ? pasteInstruction : bodyText);
+      const outlookLiveCompose = (bodyText) =>
+        'https://outlook.live.com/mail/0/deeplink/compose?subject=' +
+        subjectEnc +
+        '&body=' +
+        encodeURIComponent(bodyText == null ? pasteInstruction : bodyText);
+
+      const openOutlookInNewTab = (url) => {
+        const w = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!w) {
+          alert('Could not open a new tab. Allow pop-ups for this page, then try Generate email again.');
+        }
+        return w;
+      };
+
+      const navigateOutlookTab = (ow, bodyText) => {
+        const url = outlookOfficeCompose(bodyText);
+        if (ow && !ow.closed) {
+          try {
+            ow.location.replace(url);
+          } catch (e) {
+            ow.location.href = url;
+          }
+          return;
+        }
+        openOutlookInNewTab(url);
+      };
+
+      const tryRichClipboard = () => {
+        if (!navigator.clipboard || typeof ClipboardItem === 'undefined') return Promise.reject();
+        const blobHtml = new Blob([htmlFull], { type: 'text/html' });
+        const blobText = new Blob([plainBody], { type: 'text/plain' });
+        return navigator.clipboard.write([
+          new ClipboardItem({
+            'text/html': blobHtml,
+            'text/plain': blobText
+          })
+        ]);
+      };
+
+      const outlookTab = window.open('about:blank', '_blank', 'noopener,noreferrer');
+
+      const fallbackLongPlain = () => {
+        const owaCompose = outlookOfficeCompose(plainBody);
+        const owaLive = outlookLiveCompose(plainBody);
+        const maxOwaLen = 7500;
+        if (owaCompose.length <= maxOwaLen) {
+          navigateOutlookTab(outlookTab, plainBody);
+          return;
+        }
+        if (owaLive.length <= maxOwaLen) {
+          if (outlookTab && !outlookTab.closed) {
+            try {
+              outlookTab.location.replace(owaLive);
+            } catch (e) {
+              outlookTab.location.href = owaLive;
+            }
+          } else {
+            openOutlookInNewTab(owaLive);
+          }
+          return;
+        }
+        const pasteHint =
+          'Full grid (plain text) was copied to your clipboard.\r\n\r\nPaste into this message (Ctrl+V / Cmd+V).\r\n';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(plainBody).then(() => {
+            navigateOutlookTab(outlookTab, pasteHint);
+          });
+        } else {
+          navigateOutlookTab(
+            outlookTab,
+            pasteHint + '\r\n\r\n' + plainBody.slice(0, 800) + (plainBody.length > 800 ? '\r\n…' : '')
+          );
+        }
+      };
+
+      tryRichClipboard()
+        .then(() => {
+          navigateOutlookTab(outlookTab, pasteInstruction);
+        })
+        .catch(() => {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(plainBody).then(() => navigateOutlookTab(outlookTab, pasteInstruction)).catch(fallbackLongPlain);
+          } else {
+            fallbackLongPlain();
+          }
+        });
+    }
+
+    document.getElementById('selectAllForGrid').addEventListener('change', function() {
+      const checked = this.checked;
+      document.querySelectorAll('.include-in-grid-cb').forEach(cb => { cb.checked = checked; });
+    });
+
+    document.getElementById('generateGridBtn').addEventListener('click', () => {
+      buildDataGrid();
+      document.getElementById('dataGridSection').style.display = 'block';
+      document.getElementById('dataGridSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    document.getElementById('downloadGridCsvBtn').addEventListener('click', downloadGridCsv);
+    document.getElementById('generateEmailBtn').addEventListener('click', generateEmail);
+
+    document.getElementById('entryForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = getFormData();
+      const entries = getEntries();
+      if (editingIndex >= 0) {
+        entries[editingIndex] = data;
+        setEntries(entries);
+        exitEditMode();
+      } else {
+        entries.push(data);
+        setEntries(entries);
+        clearForm();
+      }
+      renderSavedRows();
+    });
+
+    document.getElementById('cancelEditBtn').addEventListener('click', () => {
+      exitEditMode();
+    });
+
+    const totalInput = document.getElementById('totalAmount');
+    totalInput.addEventListener('focus', function() {
+      this.value = parseUSD(this.value);
+    });
+    totalInput.addEventListener('blur', function() {
+      const formatted = formatUSD(this.value);
+      if (formatted) this.value = formatted;
+    });
+
+    document.getElementById('addMonthBtn').addEventListener('click', () => {
+      const container = document.getElementById('monthAmountRows');
+      container.appendChild(createMonthAmountRow({ month: '', monthlyAmount: '' }, true));
+    });
+
+    document.getElementById('addWbsLineBtn').addEventListener('click', () => {
+      const container = document.getElementById('wbsLinesRows');
+      container.appendChild(createWbsLineRow({ wbsElement: '', projectPrId: '', totalAmount: '' }, true));
+    });
+
+    renderMonthAmountRows(document.getElementById('monthAmountRows'), [{ month: '', monthlyAmount: '' }]);
+    renderWbsLinesRows(document.getElementById('wbsLinesRows'), [{ wbsElement: '', projectPrId: '', totalAmount: '' }]);
+
+    renderSavedRows();
+  </script>
+</body>
+</html>
