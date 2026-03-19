@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Efficiency Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4d;
+      --text: #e6edf3;
+      --text-muted: #8b9cb3;
+      --accent: #58a6ff;
+      --accent-hover: #79b8ff;
+      --success: #3fb950;
+      --warning: #d29922;
+      --danger: #f85149;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin: 0 0 1.5rem 0;
+      letter-spacing: -0.02em;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn:hover {
+      background: var(--border);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .btn-danger:hover {
+      background: rgba(248, 81, 73, 0.15);
+    }
+
+    .sheet-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+
+    .tracker-table {
+      width: 100%;
+      min-width: 400px;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      table-layout: auto;
+    }
+
+    .tracker-table th,
+    .tracker-table td {
+      border: 1px solid var(--border);
+      padding: 0.65rem 0.85rem;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .tracker-table thead th {
+      background: rgba(0, 0, 0, 0.35);
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tracker-table tbody td {
+      background: var(--surface);
+    }
+
+    .tracker-table tbody tr:hover td {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .tracker-table .row-label,
+    .tracker-table th.row-label {
+      font-weight: 600;
+      color: var(--text-muted);
+      min-width: 110px;
+      width: 110px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .row-pi .row-label       { border-left: 3px solid #3fb950; }
+    .row-dates .row-label    { border-left: 3px solid #8b9cb3; }
+    .row-sprints .row-label  { border-left: 3px solid #d29922; }
+
+    .project-row .row-label {
+      border-left: 3px solid #58a6ff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .project-row .row-label > div:first-of-type {
+      flex: 1;
+      min-width: 0;
+    }
+    .project-row .project-name-input {
+      width: 100%;
+      min-width: 0;
+      padding: 0.35rem 0.5rem;
+      margin: 0;
+      font-size: inherit;
+      font-family: inherit;
+      font-weight: 500;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text);
+    }
+    .project-row .project-name-input:hover,
+    .project-row .project-name-input:focus {
+      border-color: var(--border);
+      background: var(--bg);
+    }
+    .project-row .project-name-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
+    }
+    .project-row .project-notes-cell,
+    .project-row .project-starting-points-cell {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      width: 100%;
+    }
+    .project-row .project-starting-points-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 0.25rem;
+    }
+    .project-row .project-starting-points-cell input {
+      width: 4rem;
+      padding: 0.2rem 0.35rem;
+      font-size: 0.85rem;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text);
+    }
+    .project-row .project-starting-points-cell input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: var(--bg);
+    }
+
+    .project-row-planned .row-label,
+    .project-row-actual .row-label {
+      padding-left: 1.25rem;
+      font-weight: 500;
+      font-size: 0.85rem;
+    }
+    .project-row-planned .row-label { border-left-color: #79b8ff; }
+    .project-row-actual .row-label { border-left-color: #3fb950; }
+    .project-row-efficiencies .row-label { border-left-color: #d29922; }
+    .project-row-efficiencies .efficiency-cell {
+      text-align: center;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .project-row-efficiencies .efficiency-cell.positive { color: var(--success); }
+    .project-row-efficiencies .efficiency-cell.negative { color: var(--danger); }
+
+    .project-row-points-remaining .row-label { border-left-color: #8b9cb3; }
+    .project-row-points-remaining .points-cell {
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .starting-values-header {
+      text-align: center;
+      background: rgba(0, 0, 0, 0.35);
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .starting-values-cell {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      background: var(--surface);
+    }
+    .starting-values-cell input {
+      text-align: right;
+      width: 100%;
+    }
+    .pi-header-cell {
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .sprint-header {
+      min-width: 80px;
+      font-size: 0.7rem;
+      text-align: center;
+    }
+    .tracker-table tbody td:not(.row-label):not(.starting-values-cell):not(.add-col-cell) {
+      text-align: center;
+    }
+    .tracker-table tbody td:not(.row-label):not(.starting-values-cell):not(.add-col-cell) input {
+      text-align: center;
+    }
+    .tracker-table .efficiency-cell { text-align: center; }
+    .tracker-table .points-cell:not(.starting-values-cell) { text-align: center; }
+
+    .editable-cell {
+      cursor: text;
+      min-width: 100px;
+    }
+
+    .editable-cell:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .editable-cell input,
+    .editable-cell textarea {
+      width: 100%;
+      min-width: 0;
+      padding: 0.35rem 0.5rem;
+      margin: 0;
+      font-size: inherit;
+      font-family: inherit;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .editable-cell input:hover,
+    .editable-cell input:focus,
+    .editable-cell textarea:hover,
+    .editable-cell textarea:focus {
+      border-color: var(--border);
+      background: var(--bg);
+    }
+
+    .editable-cell input:focus,
+    .editable-cell textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
+    }
+
+    .col-header input {
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      background: transparent !important;
+    }
+
+    .col-actions {
+      width: 44px;
+      padding: 0.35rem !important;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .remove-col-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .remove-col-btn:hover {
+      color: var(--danger);
+      background: rgba(248, 81, 73, 0.15);
+    }
+
+    .remove-col-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .add-col-cell {
+      min-width: 120px;
+      padding: 0.5rem !important;
+      vertical-align: middle;
+      border-left: 2px dashed var(--border);
+    }
+
+    .project-entry {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .project-entry h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+      color: var(--text-muted);
+    }
+
+    .project-form-row {
+      display: grid;
+      grid-template-columns: 1fr 2fr minmax(100px, 1fr) auto;
+      gap: 1rem;
+      align-items: end;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      .project-form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .project-form-row label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .project-form-row input,
+    .project-form-row textarea {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    .project-form-row input:focus,
+    .project-form-row textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .project-list {
+      margin-top: 1rem;
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+    }
+
+    .project-list h3 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin: 0 0 0.5rem 0;
+    }
+
+    .project-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .project-item:last-child {
+      border-bottom: none;
+    }
+
+    .project-item-name {
+      font-weight: 500;
+      min-width: 0;
+    }
+    .project-item-name-input {
+      flex: 1;
+      min-width: 80px;
+      padding: 0.25rem 0.4rem;
+      font-size: inherit;
+      font-family: inherit;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text);
+    }
+    .project-item-name-input:hover,
+    .project-item-name-input:focus {
+      border-color: var(--border);
+      background: var(--bg);
+      outline: none;
+    }
+    .project-item-name-input:focus {
+      border-color: var(--accent);
+    }
+
+    .project-item-starting-input {
+      width: 3.5rem;
+      padding: 0.25rem 0.35rem;
+      font-size: 0.85rem;
+      text-align: right;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text-muted);
+    }
+    .project-item-starting-input:hover,
+    .project-item-starting-input:focus {
+      border-color: var(--border);
+      background: var(--bg);
+      outline: none;
+    }
+
+    .project-item-notes {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .project-item .remove-col-btn {
+      flex-shrink: 0;
+    }
+
+    .project-section {
+      margin-bottom: 2rem;
+    }
+    .project-section-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .project-section-label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin: 0;
+      flex-shrink: 0;
+    }
+    .project-section-header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      flex: 1;
+      min-width: 0;
+    }
+    .project-section-header input.project-section-name {
+      font-size: 1.25rem;
+      font-weight: 600;
+      padding: 0.35rem 0.5rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      width: 100%;
+      min-width: 0;
+    }
+    .project-section-header input.project-section-name:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .project-section-notes {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .timeline-row {
+      font-size: 0.8rem;
+    }
+    .timeline-row .timeline-label-cell {
+      min-width: 110px;
+      width: 110px;
+      background: rgba(0, 0, 0, 0.2);
+      vertical-align: middle;
+    }
+    .timeline-row .timeline-bar-cell {
+      position: relative;
+      vertical-align: middle;
+    }
+    .timeline-bar-inner {
+      position: relative;
+      width: 100%;
+      min-height: 2rem;
+    }
+    .timeline-bar {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      min-width: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #fff;
+      text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+    }
+    .timeline-bar span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      padding: 0 4px;
+    }
+    .timeline-bar-resize {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      min-width: 5px;
+      cursor: ew-resize;
+      z-index: 2;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      user-select: none;
+    }
+    .timeline-bar-resize:hover {
+      background: rgba(255,255,255,0.4);
+    }
+    .timeline-bar-resize-left {
+      left: 0;
+    }
+    .timeline-bar-resize-right {
+      right: 0;
+    }
+    .timeline-config {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 0.25rem;
+    }
+    .timeline-config input,
+    .timeline-config select {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.35rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      max-width: 4rem;
+    }
+    .timeline-config input[type="color"] {
+      width: 24px;
+      height: 22px;
+      padding: 2px;
+      cursor: pointer;
+    }
+    .timeline-config input[type="text"] {
+      max-width: 8rem;
+      min-width: 5rem;
+    }
+    .timeline-label-input {
+      width: 100%;
+      font-size: 0.8rem;
+      padding: 0.2rem 0.35rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+    }
+    .timeline-add-btn {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .tracker-section {
+      margin-bottom: 2rem;
+    }
+    .tracker-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+      color: var(--text-muted);
+    }
+
+    .graph-section {
+      margin-top: 2rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+    .graph-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+      color: var(--text-muted);
+    }
+    .graph-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .graph-controls select {
+      min-width: 200px;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+    .graph-container {
+      position: relative;
+      height: 320px;
+    }
+    .graph-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 320px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Efficiency Tracker</h1>
+
+  <section class="project-entry">
+    <h2>Project entry</h2>
+    <div class="project-form-row">
+      <div>
+        <label for="project-name">Project name</label>
+        <input type="text" id="project-name" placeholder="e.g. API Modernization" autocomplete="off">
+      </div>
+      <div>
+        <label for="project-notes">Notes (optional)</label>
+        <input type="text" id="project-notes" placeholder="Brief description or notes" autocomplete="off">
+      </div>
+      <div>
+        <label for="project-starting-points">Starting points</label>
+        <input type="text" id="project-starting-points" placeholder="e.g. 50" inputmode="numeric" autocomplete="off">
+      </div>
+      <div>
+        <button type="button" class="btn btn-primary" id="add-project-btn">Add project</button>
+      </div>
+    </div>
+    <div class="project-list" id="project-list-wrap">
+      <h3 id="project-list-title">Projects</h3>
+      <div id="project-list"></div>
+    </div>
+  </section>
+
+  <section class="tracker-section">
+    <h2>Project Tracker</h2>
+    <div class="toolbar">
+      <button type="button" class="btn btn-primary" id="add-col-btn">+ Add PI column</button>
+      <span class="text-muted" style="font-size: 0.85rem; color: var(--text-muted);">Each PI has 1 PI cell and 5 Sprint columns. Edit any cell or header.</span>
+    </div>
+    <div id="project-tables-container"></div>
+  </section>
+
+  <section class="graph-section">
+    <h2>Project velocity & efficiency graph</h2>
+    <div class="graph-controls">
+      <select id="graph-project-select">
+        <option value="">Select a project...</option>
+      </select>
+      <button type="button" class="btn btn-primary" id="generate-graph-btn">Generate graph</button>
+    </div>
+    <div class="graph-container">
+      <div id="graph-placeholder" class="graph-placeholder">Select a project and click Generate graph to view planned velocity, actual velocity, and sprint efficiencies.</div>
+      <canvas id="velocity-chart" style="display: none;"></canvas>
+    </div>
+  </section>
+
+  <script>
+    const STORAGE_KEY = 'efficiency-tracker-data';
+    const SPRINT_COUNT = 5;
+
+    let columns = [];
+    let projects = [];
+    let velocityChart = null;
+
+    function parseNum(val) {
+      const n = parseFloat(String(val || '').replace(/,/g, ''));
+      return isNaN(n) ? 0 : n;
+    }
+
+    function defaultValues() {
+      return { pi: '', dates: ['', '', '', '', ''], sprints: ['', '', '', '', ''] };
+    }
+
+    function migrateColumn(col) {
+      const v = col.values || {};
+      const out = defaultValues();
+      out.pi = v.pi ?? '';
+      if (Array.isArray(v.dates) && v.dates.length >= SPRINT_COUNT) {
+        out.dates = v.dates.slice(0, SPRINT_COUNT);
+      }
+      if (Array.isArray(v.sprints) && v.sprints.length >= SPRINT_COUNT) {
+        out.sprints = v.sprints.slice(0, SPRINT_COUNT);
+      } else if (v.sprint1 !== undefined) {
+        out.sprints = [
+          v.sprint1 ?? '',
+          v.sprint2 ?? '',
+          v.sprint3 ?? '',
+          v.sprint4 ?? '',
+          v.sprint5 ?? '',
+        ];
+      } else if (v.sprints !== undefined && typeof v.sprints === 'string') {
+        out.sprints[0] = v.sprints;
+      }
+      return { header: col.header, values: out };
+    }
+
+    function defaultSprintValues() {
+      return columns.map(() => ['', '', '', '', '']);
+    }
+
+    function ensureArray(arr, length, fill) {
+      if (!Array.isArray(arr) || arr.length !== length) {
+        return columns.map((_, i) => {
+          const existing = arr && arr[i];
+          return Array.isArray(existing) ? existing.slice(0, SPRINT_COUNT).concat(fill).slice(0, SPRINT_COUNT) : ['', '', '', '', ''];
+        });
+      }
+      return arr;
+    }
+
+    function ensureProjectSprintValues(proj) {
+      proj.sprintValues = ensureArray(proj.sprintValues, columns.length, ['', '', '', '', '']);
+      proj.plannedVelocity = ensureArray(proj.plannedVelocity, columns.length, ['', '', '', '', '']);
+      proj.actualVelocity = ensureArray(proj.actualVelocity, columns.length, ['', '', '', '', '']);
+      if (!Array.isArray(proj.timelines)) proj.timelines = [];
+      proj.timelines.forEach(t => {
+        t.startCol = Math.min(t.startCol ?? 0, columns.length - 1);
+        t.endCol = Math.min(t.endCol ?? 0, columns.length - 1);
+      });
+    }
+
+    const TIMELINE_COLORS = ['#58a6ff', '#3fb950', '#d29922', '#f85149', '#a371f7', '#79c0ff', '#7ee787', '#ffa657'];
+
+    function addTimeline(proj) {
+      if (!proj.timelines) proj.timelines = [];
+      const lastColor = proj.timelines.length > 0 ? proj.timelines[proj.timelines.length - 1].color : TIMELINE_COLORS[0];
+      const colorIdx = TIMELINE_COLORS.indexOf(lastColor) + 1;
+      proj.timelines.push({
+        id: Date.now().toString(36),
+        label: 'Timeline ' + (proj.timelines.length + 1),
+        color: TIMELINE_COLORS[colorIdx % TIMELINE_COLORS.length],
+        startCol: 0,
+        startSprint: 0,
+        endCol: 0,
+        endSprint: 4,
+        visible: true,
+      });
+      save();
+      render();
+    }
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (Array.isArray(data.columns) && data.columns.length > 0) {
+            columns = data.columns.map(migrateColumn);
+          }
+          if (Array.isArray(data.projects)) {
+            projects = data.projects;
+            projects.forEach(ensureProjectSprintValues);
+          }
+          if (columns.length > 0) return;
+        }
+      } catch (_) {}
+      columns = [
+        { header: 'PI 1', values: defaultValues() },
+        { header: 'PI 2', values: defaultValues() },
+      ];
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ columns, projects }));
+    }
+
+    function renderProjects() {
+      const list = document.getElementById('project-list');
+      list.innerHTML = '';
+      projects.forEach((proj, idx) => {
+        const div = document.createElement('div');
+        div.className = 'project-item';
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'project-item-name project-item-name-input';
+        nameInput.value = proj.name || '';
+        nameInput.placeholder = 'Project name';
+        nameInput.addEventListener('change', () => {
+          proj.name = nameInput.value.trim() || 'Unnamed project';
+          save();
+          render();
+        });
+        const notesSpan = document.createElement('span');
+        notesSpan.className = 'project-item-notes';
+        notesSpan.textContent = proj.notes || '';
+        notesSpan.title = proj.notes || '';
+        const startingInput = document.createElement('input');
+        startingInput.type = 'text';
+        startingInput.className = 'project-item-starting-input';
+        startingInput.placeholder = 'Pts';
+        startingInput.value = proj.startingPoints ?? '';
+        startingInput.title = 'Starting points';
+        startingInput.addEventListener('change', () => {
+          proj.startingPoints = startingInput.value.trim();
+          save();
+          render();
+        });
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'remove-col-btn';
+        removeBtn.title = 'Remove project';
+        removeBtn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
+        removeBtn.addEventListener('click', () => {
+          projects.splice(idx, 1);
+          save();
+          renderProjects();
+        });
+        div.appendChild(nameInput);
+        div.appendChild(notesSpan);
+        div.appendChild(startingInput);
+        div.appendChild(removeBtn);
+        list.appendChild(div);
+      });
+      renderGraphProjectSelector();
+    }
+
+    function renderGraphProjectSelector() {
+      const sel = document.getElementById('graph-project-select');
+      if (!sel) return;
+      const current = sel.value;
+      sel.innerHTML = '<option value="">Select a project...</option>';
+      projects.forEach((proj, idx) => {
+        const opt = document.createElement('option');
+        opt.value = String(idx);
+        opt.textContent = proj.name || 'Unnamed project';
+        sel.appendChild(opt);
+      });
+      if (current && projects[parseInt(current, 10)]) sel.value = current;
+    }
+
+    function getProjectChartData(proj) {
+      const planned = proj.plannedVelocity || defaultSprintValues();
+      const actual = proj.actualVelocity || defaultSprintValues();
+      const labels = [];
+      const plannedData = [];
+      const actualData = [];
+      const efficiencyData = [];
+      columns.forEach((col, colIndex) => {
+        const plannedVals = planned[colIndex] || ['', '', '', '', ''];
+        const actualVals = actual[colIndex] || ['', '', '', '', ''];
+        for (let s = 0; s < SPRINT_COUNT; s++) {
+          const piLabel = (col.header || 'PI ' + (colIndex + 1)).replace(/\s/g, '');
+          labels.push(piLabel + '-S' + (s + 1));
+          const p = parseNum(plannedVals[s]);
+          const a = parseNum(actualVals[s]);
+          plannedData.push(p);
+          actualData.push(a);
+          const eff = (p === 0) ? null : (a - p) / p;
+          efficiencyData.push(eff === null ? null : (eff * 100));
+        }
+      });
+      return { labels, plannedData, actualData, efficiencyData };
+    }
+
+    function generateGraph() {
+      const sel = document.getElementById('graph-project-select');
+      const canvas = document.getElementById('velocity-chart');
+      const placeholder = document.getElementById('graph-placeholder');
+      if (!sel || !canvas || !placeholder) return;
+      const idx = parseInt(sel.value, 10);
+      if (isNaN(idx) || idx < 0 || !projects[idx]) {
+        placeholder.style.display = 'flex';
+        canvas.style.display = 'none';
+        if (velocityChart) {
+          velocityChart.destroy();
+          velocityChart = null;
+        }
+        return;
+      }
+      const proj = projects[idx];
+      const { labels, plannedData, actualData, efficiencyData } = getProjectChartData(proj);
+      placeholder.style.display = 'none';
+      canvas.style.display = 'block';
+
+      if (velocityChart) velocityChart.destroy();
+      const ctx = canvas.getContext('2d');
+      Chart.defaults.color = '#8b9cb3';
+      Chart.defaults.borderColor = '#2d3a4d';
+      velocityChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Planned velocity',
+              data: plannedData,
+              backgroundColor: 'rgba(88, 166, 255, 0.6)',
+              borderColor: '#58a6ff',
+              borderWidth: 1,
+              yAxisID: 'y',
+            },
+            {
+              label: 'Actual velocity',
+              data: actualData,
+              backgroundColor: 'rgba(63, 185, 80, 0.6)',
+              borderColor: '#3fb950',
+              borderWidth: 1,
+              yAxisID: 'y',
+            },
+            {
+              label: 'Sprint efficiency %',
+              data: efficiencyData,
+              type: 'line',
+              borderColor: '#d29922',
+              backgroundColor: 'rgba(210, 153, 34, 0.2)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 4,
+              yAxisID: 'y1',
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'top' },
+          },
+          scales: {
+            y: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              title: { display: true, text: 'Velocity (points)' },
+              min: 0,
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              title: { display: true, text: 'Efficiency %' },
+              min: -100,
+              max: 100,
+              grid: { drawOnChartArea: false },
+            },
+          },
+        },
+      });
+    }
+
+    function computeEfficiency(planned, actual) {
+      const p = parseFloat(String(planned).replace(/,/g, ''));
+      const a = parseFloat(String(actual).replace(/,/g, ''));
+      if (p === 0 || isNaN(p)) return null;
+      if (isNaN(a)) return null;
+      return (a - p) / p;
+    }
+
+    function render() {
+      const container = document.getElementById('project-tables-container');
+      container.innerHTML = '';
+
+      if (projects.length === 0) {
+        const emptyMsg = document.createElement('p');
+        emptyMsg.className = 'text-muted';
+        emptyMsg.style.padding = '2rem'; emptyMsg.style.textAlign = 'center';
+        emptyMsg.textContent = 'Add a project above to get started.';
+        container.appendChild(emptyMsg);
+        return;
+      }
+
+      projects.forEach((proj, projIdx) => {
+        ensureProjectSprintValues(proj);
+
+        const section = document.createElement('section');
+        section.className = 'project-section';
+        section.setAttribute('data-project-idx', projIdx);
+
+        const header = document.createElement('div');
+        header.className = 'project-section-header';
+        const sectionLabel = document.createElement('label');
+        sectionLabel.className = 'project-section-label';
+        sectionLabel.textContent = 'Project';
+        sectionLabel.setAttribute('for', 'project-name-' + projIdx);
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.id = 'project-name-' + projIdx;
+        nameInput.className = 'project-section-name';
+        nameInput.value = proj.name || '';
+        nameInput.placeholder = 'Project name';
+        nameInput.addEventListener('change', () => {
+          proj.name = nameInput.value.trim() || 'Unnamed project';
+          save();
+          renderProjects();
+        });
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'remove-col-btn';
+        removeBtn.title = 'Remove project';
+        removeBtn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
+        removeBtn.addEventListener('click', () => {
+          projects.splice(projIdx, 1);
+          save();
+          render();
+          renderProjects();
+        });
+        const addTimelineBtn = document.createElement('button');
+        addTimelineBtn.type = 'button';
+        addTimelineBtn.className = 'btn timeline-add-btn';
+        addTimelineBtn.textContent = '+ Add timeline';
+        addTimelineBtn.addEventListener('click', () => {
+          addTimeline(proj);
+        });
+        header.appendChild(sectionLabel);
+        header.appendChild(nameInput);
+        header.appendChild(addTimelineBtn);
+        header.appendChild(removeBtn);
+        if (proj.notes) {
+          const notesWrap = document.createElement('div');
+          notesWrap.style.flex = '1 1 100%';
+          const notesEl = document.createElement('span');
+          notesEl.className = 'project-section-notes';
+          notesEl.textContent = proj.notes;
+          notesEl.title = proj.notes;
+          notesWrap.appendChild(notesEl);
+          header.appendChild(notesWrap);
+        }
+        section.appendChild(header);
+
+        const sheetWrap = document.createElement('div');
+        sheetWrap.className = 'sheet-wrap';
+        const table = document.createElement('table');
+        table.className = 'tracker-table';
+
+        const thead = document.createElement('thead');
+        const theadPiRow = document.createElement('tr');
+        theadPiRow.innerHTML = '<th class="row-label" style="min-width: 110px; width: 110px;">Period / Level</th>';
+        const addColTh = document.createElement('th');
+        addColTh.className = 'col-actions';
+        const startingValuesTh = document.createElement('th');
+        startingValuesTh.className = 'col-header starting-values-header';
+        startingValuesTh.rowSpan = 2;
+        startingValuesTh.textContent = 'Starting values';
+        startingValuesTh.style.minWidth = '90px';
+        theadPiRow.appendChild(startingValuesTh);
+        columns.forEach((col, colIndex) => {
+          const thPi = document.createElement('th');
+          thPi.className = 'col-header pi-header-cell';
+          thPi.colSpan = SPRINT_COUNT;
+          const headerWrap = document.createElement('div');
+          headerWrap.style.display = 'flex';
+          headerWrap.style.alignItems = 'center';
+          headerWrap.style.justifyContent = 'center';
+          headerWrap.style.gap = '0.35rem';
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = col.header;
+          input.placeholder = 'e.g. PI 1';
+          input.style.flex = '1';
+          input.style.minWidth = '0';
+          input.style.textAlign = 'center';
+          input.addEventListener('change', () => {
+            col.header = input.value.trim() || 'PI ' + (colIndex + 1);
+            save();
+          });
+          const removeBtn2 = document.createElement('button');
+          removeBtn2.type = 'button';
+          removeBtn2.className = 'remove-col-btn';
+          removeBtn2.title = 'Remove PI column';
+          removeBtn2.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
+          removeBtn2.addEventListener('click', () => {
+            columns.splice(colIndex, 1);
+            projects.forEach(p => {
+              if (Array.isArray(p.sprintValues) && p.sprintValues.length > colIndex) p.sprintValues.splice(colIndex, 1);
+              if (Array.isArray(p.plannedVelocity) && p.plannedVelocity.length > colIndex) p.plannedVelocity.splice(colIndex, 1);
+              if (Array.isArray(p.actualVelocity) && p.actualVelocity.length > colIndex) p.actualVelocity.splice(colIndex, 1);
+              (p.timelines || []).forEach(t => {
+                if (t.startCol >= colIndex) t.startCol = Math.max(0, (t.startCol || 0) - 1);
+                if (t.endCol >= colIndex) t.endCol = Math.max(0, (t.endCol || 0) - 1);
+              });
+            });
+            save();
+            render();
+          });
+          headerWrap.appendChild(input);
+          headerWrap.appendChild(removeBtn2);
+          thPi.appendChild(headerWrap);
+          theadPiRow.appendChild(thPi);
+        });
+        theadPiRow.appendChild(addColTh);
+        thead.appendChild(theadPiRow);
+
+        const theadSprintRow = document.createElement('tr');
+        theadSprintRow.innerHTML = '<th></th>';
+        const addColThSub = document.createElement('th');
+        addColThSub.className = 'col-actions';
+        columns.forEach(() => {
+          for (let s = 0; s < SPRINT_COUNT; s++) {
+            const thSub = document.createElement('th');
+            thSub.className = 'sprint-header';
+            thSub.textContent = 'Sprint ' + (s + 1);
+            theadSprintRow.appendChild(thSub);
+          }
+        });
+        theadSprintRow.appendChild(addColThSub);
+        thead.appendChild(theadSprintRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        const addColCell = document.createElement('td');
+        addColCell.className = 'add-col-cell';
+        addColCell.rowSpan = 10;
+        const addColBtn = document.createElement('button');
+        addColBtn.type = 'button';
+        addColBtn.className = 'btn btn-primary';
+        addColBtn.textContent = '+ Add PI column';
+        addColBtn.addEventListener('click', addColumn);
+        addColCell.appendChild(addColBtn);
+
+        const totalSprintCells = columns.length * SPRINT_COUNT;
+        (proj.timelines || []).filter(t => t.visible !== false).forEach((tl, tlIdx) => {
+          const tr = document.createElement('tr');
+          tr.className = 'timeline-row';
+          const labelTd = document.createElement('td');
+          labelTd.className = 'row-label timeline-label-cell';
+          const labelInput = document.createElement('input');
+          labelInput.type = 'text';
+          labelInput.value = tl.label || '';
+          labelInput.placeholder = 'Timeline label';
+          labelInput.className = 'timeline-label-input';
+          labelInput.addEventListener('change', () => {
+            tl.label = labelInput.value.trim() || 'Timeline';
+            save();
+            render();
+          });
+          const configDiv = document.createElement('div');
+          configDiv.className = 'timeline-config';
+          const colorInput = document.createElement('input');
+          colorInput.type = 'color';
+          colorInput.value = tl.color || TIMELINE_COLORS[0];
+          colorInput.title = 'Color';
+          colorInput.addEventListener('change', () => {
+            tl.color = colorInput.value;
+            save();
+            render();
+          });
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'remove-col-btn';
+          delBtn.title = 'Remove timeline';
+          delBtn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
+          delBtn.addEventListener('click', () => {
+            proj.timelines = (proj.timelines || []).filter(t => t.id !== tl.id);
+            save();
+            render();
+          });
+          labelTd.appendChild(labelInput);
+          configDiv.appendChild(colorInput);
+          configDiv.appendChild(delBtn);
+          labelTd.appendChild(configDiv);
+          tr.appendChild(labelTd);
+          const startTd = document.createElement('td');
+          startTd.className = 'starting-values-cell';
+          startTd.textContent = '';
+          tr.appendChild(startTd);
+          const barTd = document.createElement('td');
+          barTd.className = 'timeline-bar-cell';
+          barTd.colSpan = totalSprintCells;
+          const barInner = document.createElement('div');
+          barInner.className = 'timeline-bar-inner';
+          const startCell = (tl.startCol ?? 0) * SPRINT_COUNT + (tl.startSprint ?? 0);
+          const endCell = (tl.endCol ?? 0) * SPRINT_COUNT + (tl.endSprint ?? 4);
+          const leftPct = totalSprintCells > 0 ? (startCell / totalSprintCells) * 100 : 0;
+          const widthPct = totalSprintCells > 0 ? (Math.max(0, endCell - startCell + 1) / totalSprintCells) * 100 : 100;
+          const bar = document.createElement('div');
+          bar.className = 'timeline-bar';
+          bar.style.left = leftPct + '%';
+          bar.style.width = widthPct + '%';
+          bar.style.backgroundColor = tl.color || TIMELINE_COLORS[0];
+          const resizeLeft = document.createElement('div');
+          resizeLeft.className = 'timeline-bar-resize timeline-bar-resize-left';
+          resizeLeft.title = 'Drag to adjust start';
+          const resizeRight = document.createElement('div');
+          resizeRight.className = 'timeline-bar-resize timeline-bar-resize-right';
+          resizeRight.title = 'Drag to adjust end';
+          const span = document.createElement('span');
+          span.textContent = tl.label || 'Timeline';
+          bar.appendChild(resizeLeft);
+          bar.appendChild(span);
+          bar.appendChild(resizeRight);
+          const updateBarFromPos = (clientX, isLeft) => {
+            const rect = barInner.getBoundingClientRect();
+            const relX = clientX - rect.left;
+            const cellIdx = Math.max(0, Math.min(totalSprintCells - 1, Math.floor((relX / rect.width) * totalSprintCells)));
+            const col = Math.floor(cellIdx / SPRINT_COUNT);
+            const sprint = cellIdx % SPRINT_COUNT;
+            if (isLeft) {
+              tl.startCol = col;
+              tl.startSprint = sprint;
+              if (col > (tl.endCol ?? 0) || (col === (tl.endCol ?? 0) && sprint > (tl.endSprint ?? 4))) {
+                tl.endCol = col;
+                tl.endSprint = sprint;
+              }
+            } else {
+              tl.endCol = col;
+              tl.endSprint = sprint;
+              if (col < (tl.startCol ?? 0) || (col === (tl.startCol ?? 0) && sprint < (tl.startSprint ?? 0))) {
+                tl.startCol = col;
+                tl.startSprint = sprint;
+              }
+            }
+            const sc = (tl.startCol ?? 0) * SPRINT_COUNT + (tl.startSprint ?? 0);
+            const ec = (tl.endCol ?? 0) * SPRINT_COUNT + (tl.endSprint ?? 4);
+            bar.style.left = (sc / totalSprintCells * 100) + '%';
+            bar.style.width = (Math.max(0, ec - sc + 1) / totalSprintCells * 100) + '%';
+          };
+          const cleanup = (handler) => {
+            document.removeEventListener('mousemove', handler);
+            document.body.style.userSelect = '';
+            document.body.style.cursor = '';
+            save();
+            render();
+          };
+          const startDrag = (isLeft) => {
+            document.body.style.userSelect = 'none';
+            document.body.style.cursor = 'ew-resize';
+            const handler = (ev) => updateBarFromPos(ev.clientX, isLeft);
+            document.addEventListener('mousemove', handler);
+            document.addEventListener('mouseup', () => cleanup(handler), { once: true });
+          };
+          resizeLeft.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            startDrag(true);
+          });
+          resizeRight.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            startDrag(false);
+          });
+          barInner.appendChild(bar);
+          barTd.appendChild(barInner);
+          tr.appendChild(barTd);
+          tbody.appendChild(tr);
+        });
+
+        const rowPi = document.createElement('tr');
+        rowPi.className = 'row-pi';
+        rowPi.innerHTML = '<td class="row-label">PI</td>';
+        const startingValuesTd = document.createElement('td');
+        startingValuesTd.className = 'starting-values-cell';
+        startingValuesTd.rowSpan = 3;
+        startingValuesTd.textContent = '';
+        rowPi.appendChild(startingValuesTd);
+        columns.forEach((col, colIndex) => {
+          const tdPi = document.createElement('td');
+          tdPi.className = 'editable-cell';
+          tdPi.colSpan = SPRINT_COUNT;
+          const piInput = document.createElement('input');
+          piInput.type = 'text';
+          piInput.value = col.values.pi ?? '';
+          piInput.placeholder = 'e.g. PI 1';
+          piInput.addEventListener('change', () => {
+            col.values.pi = piInput.value;
+            save();
+          });
+          tdPi.appendChild(piInput);
+          rowPi.appendChild(tdPi);
+        });
+        rowPi.appendChild(addColCell);
+        tbody.appendChild(rowPi);
+
+        const rowDates = document.createElement('tr');
+        rowDates.className = 'row-dates';
+        rowDates.innerHTML = '<td class="row-label">Dates</td>';
+        columns.forEach((col) => {
+          for (let s = 0; s < SPRINT_COUNT; s++) {
+            const td = document.createElement('td');
+            td.className = 'editable-cell';
+            const cellInput = document.createElement('input');
+            cellInput.type = 'text';
+            cellInput.value = (col.values.dates && col.values.dates[s]) ?? '';
+            cellInput.placeholder = 'e.g. 1/15/25';
+            const idx = s;
+            cellInput.addEventListener('change', () => {
+              if (!col.values.dates) col.values.dates = ['', '', '', '', ''];
+              col.values.dates[idx] = cellInput.value;
+              save();
+            });
+            td.appendChild(cellInput);
+            rowDates.appendChild(td);
+          }
+        });
+        tbody.appendChild(rowDates);
+
+        const rowSprints = document.createElement('tr');
+        rowSprints.className = 'row-sprints';
+        rowSprints.innerHTML = '<td class="row-label">Sprints</td>';
+        columns.forEach((col) => {
+          for (let s = 0; s < SPRINT_COUNT; s++) {
+            const td = document.createElement('td');
+            td.className = 'editable-cell';
+            const cellInput = document.createElement('input');
+            cellInput.type = 'text';
+            cellInput.value = (col.values.sprints && col.values.sprints[s]) ?? '';
+            cellInput.placeholder = 'Sprint ' + (s + 1);
+            const idx = s;
+            cellInput.addEventListener('change', () => {
+              if (!col.values.sprints) col.values.sprints = ['', '', '', '', ''];
+              col.values.sprints[idx] = cellInput.value;
+              save();
+            });
+            td.appendChild(cellInput);
+            rowSprints.appendChild(td);
+          }
+        });
+        tbody.appendChild(rowSprints);
+
+        function addProjectDataRow(proj, key, label, rowClass) {
+          const tr = document.createElement('tr');
+          tr.className = 'project-row project-row-' + rowClass;
+          const labelTd = document.createElement('td');
+          labelTd.className = 'row-label';
+          labelTd.textContent = label;
+          tr.appendChild(labelTd);
+          const vals = proj[key] || defaultSprintValues();
+          columns.forEach((col, colIndex) => {
+            const sprintVals = vals[colIndex] || ['', '', '', '', ''];
+            for (let s = 0; s < SPRINT_COUNT; s++) {
+              const td = document.createElement('td');
+              td.className = 'editable-cell';
+              const cellInput = document.createElement('input');
+              cellInput.type = 'text';
+              cellInput.value = sprintVals[s] ?? '';
+              cellInput.placeholder = rowClass === 'planned' ? 'Planned' : 'Actual';
+              const cIdx = colIndex;
+              const sIdx = s;
+              cellInput.addEventListener('change', () => {
+                if (!proj[key]) proj[key] = defaultSprintValues();
+                if (!proj[key][cIdx]) proj[key][cIdx] = ['', '', '', '', ''];
+                proj[key][cIdx][sIdx] = cellInput.value;
+                save();
+                render();
+              });
+              td.appendChild(cellInput);
+              tr.appendChild(td);
+            }
+          });
+          tbody.appendChild(tr);
+        }
+
+        function addSprintEfficienciesRow(proj) {
+          const tr = document.createElement('tr');
+          tr.className = 'project-row project-row-efficiencies';
+          const labelTd = document.createElement('td');
+          labelTd.className = 'row-label';
+          labelTd.textContent = 'Sprint efficiencies';
+          tr.appendChild(labelTd);
+          const planned = proj.plannedVelocity || defaultSprintValues();
+          const actual = proj.actualVelocity || defaultSprintValues();
+          columns.forEach((col, colIndex) => {
+            const plannedVals = planned[colIndex] || ['', '', '', '', ''];
+            const actualVals = actual[colIndex] || ['', '', '', '', ''];
+            for (let s = 0; s < SPRINT_COUNT; s++) {
+              const td = document.createElement('td');
+              td.className = 'efficiency-cell';
+              const eff = computeEfficiency(plannedVals[s], actualVals[s]);
+              if (eff === null) {
+                td.textContent = '—';
+              } else {
+                const pct = eff * 100;
+                td.textContent = pct.toFixed(1) + '%';
+                if (pct > 0) td.classList.add('positive');
+                else if (pct < 0) td.classList.add('negative');
+              }
+              tr.appendChild(td);
+            }
+          });
+          tbody.appendChild(tr);
+        }
+
+        function addProjectPointsRemainingRow(proj) {
+          const start = parseNum(proj.startingPoints);
+          const planned = proj.plannedVelocity || defaultSprintValues();
+          const actual = proj.actualVelocity || defaultSprintValues();
+          const tr = document.createElement('tr');
+          tr.className = 'project-row project-row-points-remaining';
+          const labelTd = document.createElement('td');
+          labelTd.className = 'row-label';
+          labelTd.textContent = 'Project Points Remaining';
+          tr.appendChild(labelTd);
+          let pointsLeft = start;
+          columns.forEach((col, colIndex) => {
+            const plannedVals = planned[colIndex] || ['', '', '', '', ''];
+            const actualVals = actual[colIndex] || ['', '', '', '', ''];
+            for (let s = 0; s < SPRINT_COUNT; s++) {
+              if (colIndex === 0 && s === 0) {
+                pointsLeft = start - parseNum(plannedVals[s]);
+              } else {
+                pointsLeft = pointsLeft - parseNum(plannedVals[s]);
+              }
+              const td = document.createElement('td');
+              td.className = 'points-cell';
+              td.textContent = pointsLeft.toFixed(1);
+              tr.appendChild(td);
+            }
+          });
+          tbody.appendChild(tr);
+
+          const actualRemainingTr = document.createElement('tr');
+          actualRemainingTr.className = 'project-row project-row-starting-minus-remaining';
+          const actualRemainingLabelTd = document.createElement('td');
+          actualRemainingLabelTd.className = 'row-label';
+          actualRemainingLabelTd.textContent = 'Actual Project Points remaining';
+          actualRemainingTr.appendChild(actualRemainingLabelTd);
+          let actualRemaining = start;
+          columns.forEach((col, colIndex) => {
+            const actualVals = actual[colIndex] || ['', '', '', '', ''];
+            for (let s = 0; s < SPRINT_COUNT; s++) {
+              if (colIndex === 0 && s === 0) {
+                actualRemaining = start - parseNum(actualVals[s]);
+              } else {
+                actualRemaining = actualRemaining - parseNum(actualVals[s]);
+              }
+              const td = document.createElement('td');
+              td.className = 'points-cell';
+              td.textContent = actualRemaining.toFixed(1);
+              actualRemainingTr.appendChild(td);
+            }
+          });
+          tbody.appendChild(actualRemainingTr);
+
+          const projectEffTr = document.createElement('tr');
+          projectEffTr.className = 'project-row project-row-efficiencies';
+          const projectEffLabelTd = document.createElement('td');
+          projectEffLabelTd.className = 'row-label';
+          projectEffLabelTd.textContent = 'Project Efficiency';
+          projectEffTr.appendChild(projectEffLabelTd);
+          let ppr = start;
+          let appr = start;
+          columns.forEach((col, colIndex) => {
+            const plannedVals = planned[colIndex] || ['', '', '', '', ''];
+            const actualVals = actual[colIndex] || ['', '', '', '', ''];
+            for (let s = 0; s < SPRINT_COUNT; s++) {
+              if (colIndex === 0 && s === 0) {
+                ppr = start - parseNum(plannedVals[s]);
+                appr = start - parseNum(actualVals[s]);
+              } else {
+                ppr = ppr - parseNum(plannedVals[s]);
+                appr = appr - parseNum(actualVals[s]);
+              }
+              const eff = ppr > 0 ? (ppr - appr) / ppr : null;
+              const td = document.createElement('td');
+              td.className = 'efficiency-cell';
+              if (eff === null) {
+                td.textContent = '—';
+              } else {
+                const pct = eff * 100;
+                td.textContent = pct.toFixed(1) + '%';
+                if (pct > 0) td.classList.add('positive');
+                else if (pct < 0) td.classList.add('negative');
+              }
+              projectEffTr.appendChild(td);
+            }
+          });
+          tbody.appendChild(projectEffTr);
+        }
+
+        const trProject = document.createElement('tr');
+        trProject.className = 'project-row';
+        const labelTd = document.createElement('td');
+        labelTd.className = 'row-label';
+        labelTd.textContent = 'Project';
+        trProject.appendChild(labelTd);
+        const projStartingTd = document.createElement('td');
+        projStartingTd.className = 'editable-cell starting-values-cell points-cell';
+        projStartingTd.rowSpan = 7;
+        const projStartingInput = document.createElement('input');
+        projStartingInput.type = 'text';
+        projStartingInput.inputMode = 'numeric';
+        projStartingInput.value = proj.startingPoints ?? '';
+        projStartingInput.placeholder = '—';
+        projStartingInput.title = 'Starting points';
+        projStartingInput.addEventListener('change', () => {
+          proj.startingPoints = projStartingInput.value.trim();
+          save();
+          renderProjects();
+          render();
+        });
+        projStartingTd.appendChild(projStartingInput);
+        trProject.appendChild(projStartingTd);
+        const vals = proj.sprintValues || defaultSprintValues();
+        columns.forEach((col, colIndex) => {
+          const sprintVals = vals[colIndex] || ['', '', '', '', ''];
+          for (let s = 0; s < SPRINT_COUNT; s++) {
+            const td = document.createElement('td');
+            td.className = 'editable-cell';
+            const cellInput = document.createElement('input');
+            cellInput.type = 'text';
+            cellInput.value = sprintVals[s] ?? '';
+            cellInput.placeholder = 'S' + (s + 1);
+            const cIdx = colIndex;
+            const sIdx = s;
+            cellInput.addEventListener('change', () => {
+              if (!proj.sprintValues) proj.sprintValues = defaultSprintValues();
+              if (!proj.sprintValues[cIdx]) proj.sprintValues[cIdx] = ['', '', '', '', ''];
+              proj.sprintValues[cIdx][sIdx] = cellInput.value;
+              save();
+            });
+            td.appendChild(cellInput);
+            trProject.appendChild(td);
+          }
+        });
+        tbody.appendChild(trProject);
+        addProjectDataRow(proj, 'plannedVelocity', 'Planned velocity', 'planned');
+        addProjectDataRow(proj, 'actualVelocity', 'Actual velocity', 'actual');
+        addSprintEfficienciesRow(proj);
+        addProjectPointsRemainingRow(proj);
+
+        table.appendChild(tbody);
+        sheetWrap.appendChild(table);
+        section.appendChild(sheetWrap);
+        container.appendChild(section);
+      });
+    }
+
+    function addColumn() {
+      const n = columns.length + 1;
+      columns.push({
+        header: 'PI ' + n,
+        values: defaultValues(),
+      });
+      projects.forEach(p => {
+        if (!p.sprintValues) p.sprintValues = [];
+        p.sprintValues.push(['', '', '', '', '']);
+        if (!p.plannedVelocity) p.plannedVelocity = [];
+        p.plannedVelocity.push(['', '', '', '', '']);
+        if (!p.actualVelocity) p.actualVelocity = [];
+        p.actualVelocity.push(['', '', '', '', '']);
+      });
+      save();
+      render();
+    }
+
+    document.getElementById('add-col-btn').addEventListener('click', addColumn);
+
+    document.getElementById('add-project-btn').addEventListener('click', () => {
+      const nameInput = document.getElementById('project-name');
+      const notesInput = document.getElementById('project-notes');
+      const name = (nameInput.value || '').trim();
+      if (!name) return;
+      const sprintValues = columns.map(() => ['', '', '', '', '']);
+      const plannedVelocity = columns.map(() => ['', '', '', '', '']);
+      const actualVelocity = columns.map(() => ['', '', '', '', '']);
+      const startingPointsInput = document.getElementById('project-starting-points');
+      const startingPoints = (startingPointsInput && startingPointsInput.value) ? startingPointsInput.value.trim() : '';
+      projects.push({ name, notes: (notesInput.value || '').trim(), startingPoints, sprintValues, plannedVelocity, actualVelocity, timelines: [] });
+      save();
+      renderProjects();
+      render();
+      nameInput.value = '';
+      notesInput.value = '';
+      if (startingPointsInput) startingPointsInput.value = '';
+      nameInput.focus();
+    });
+
+    document.getElementById('project-name').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('add-project-btn').click();
+      }
+    });
+
+    document.getElementById('generate-graph-btn').addEventListener('click', generateGraph);
+
+    function getFocusableElements() {
+      const selector = 'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+      return Array.from(document.querySelectorAll(selector)).filter(el => {
+        return el.offsetParent !== null && !el.hasAttribute('disabled');
+      });
+    }
+
+    document.addEventListener('keydown', (e) => {
+      const target = e.target;
+      if (!target.matches('input, select, textarea')) return;
+      if (target.id === 'project-name') return;
+      const focusable = getFocusableElements();
+      const idx = focusable.indexOf(target);
+      if (idx === -1) return;
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const next = focusable[idx + 1];
+        if (next) next.focus();
+      } else if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault();
+        const prev = focusable[idx - 1];
+        if (prev) prev.focus();
+      }
+    });
+
+    load();
+    renderProjects();
+    render();
+  </script>
+</body>
+</html>
