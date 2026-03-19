@@ -246,11 +246,42 @@
       margin-bottom: 2rem;
     }
 
-    .data-entry h2 {
+    h2.section-heading {
       font-size: 1rem;
       font-weight: 600;
       margin: 0 0 1rem 0;
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
       color: var(--text-muted);
+      transition: background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+      display: inline-block;
+      width: fit-content;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .data-entry h2.section-heading {
+      margin: 0 0 1rem 0;
+    }
+
+    .saved-section .grid-toolbar h2.section-heading {
+      margin: 0;
+    }
+
+    .data-grid-section h2.section-heading {
+      margin: 0 0 1rem 0;
+    }
+
+    h2.section-heading.section-heading-checks-incomplete {
+      color: var(--text);
+      background: rgba(210, 153, 34, 0.42);
+      box-shadow: inset 0 0 0 1px rgba(210, 153, 34, 0.65);
+    }
+
+    h2.section-heading.section-heading-checks-complete {
+      color: var(--text);
+      background: rgba(63, 185, 80, 0.32);
+      box-shadow: inset 0 0 0 1px rgba(63, 185, 80, 0.55);
     }
 
     .entry-grid {
@@ -353,13 +384,6 @@
 
     .entry-actions {
       margin-top: 0.5rem;
-    }
-
-    .saved-section h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin: 0 0 1rem 0;
-      color: var(--text-muted);
     }
 
     .saved-entries-toolbar {
@@ -547,13 +571,6 @@
       border-top: 1px solid var(--border);
     }
 
-    .data-grid-section h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin: 0 0 1rem 0;
-      color: var(--text-muted);
-    }
-
     #dataGridTable {
       text-align: left;
     }
@@ -590,7 +607,7 @@
   </header>
 
   <section class="data-entry">
-    <h2>Data entry</h2>
+    <h2 id="dataEntrySectionHeading" class="section-heading">Data entry</h2>
     <form id="entryForm">
       <div class="entry-grid">
         <div class="entry-field">
@@ -702,7 +719,7 @@
 
   <section class="saved-section">
     <div class="grid-toolbar">
-      <h2 style="margin: 0;">Saved entries</h2>
+      <h2 id="savedSectionHeading" class="section-heading">Saved entries</h2>
       <button type="button" class="btn btn-primary" id="generateGridBtn">Generate grid</button>
     </div>
     <div class="saved-entries-toolbar">
@@ -712,7 +729,7 @@
   </section>
 
   <section class="data-grid-section" id="dataGridSection" style="display: none;">
-    <h2>Data grid</h2>
+    <h2 id="dataGridSectionHeading" class="section-heading">Data grid</h2>
     <div class="grid-toolbar">
       <button type="button" class="btn" id="downloadGridCsvBtn">Download CSV</button>
       <button type="button" class="btn" id="generateEmailBtn">Generate email</button>
@@ -855,6 +872,63 @@
       header.classList.remove('header-checks-complete', 'header-checks-incomplete');
       if (entryWorkflowChecksComplete(entry)) header.classList.add('header-checks-complete');
       else header.classList.add('header-checks-incomplete');
+    }
+
+    function applySectionHeadingWorkflowState(el, state) {
+      if (!el) return;
+      el.classList.remove('section-heading-checks-complete', 'section-heading-checks-incomplete');
+      if (state === 'complete') el.classList.add('section-heading-checks-complete');
+      else if (state === 'incomplete') el.classList.add('section-heading-checks-incomplete');
+    }
+
+    function formWorkflowChecksComplete() {
+      const form = document.getElementById('entryForm');
+      if (!form) return false;
+      return WORKFLOW_CHECK_FIELDS.every((f) => {
+        const field = form.elements.namedItem(f);
+        return field && 'checked' in field && field.checked;
+      });
+    }
+
+    function updateDataEntrySectionHeading() {
+      const el = document.getElementById('dataEntrySectionHeading');
+      if (!el) return;
+      applySectionHeadingWorkflowState(el, formWorkflowChecksComplete() ? 'complete' : 'incomplete');
+    }
+
+    function updateSavedSectionHeading() {
+      const el = document.getElementById('savedSectionHeading');
+      if (!el) return;
+      const entries = getEntries();
+      if (entries.length === 0) {
+        applySectionHeadingWorkflowState(el, 'neutral');
+        return;
+      }
+      const allComplete = entries.every((e) => entryWorkflowChecksComplete(e));
+      applySectionHeadingWorkflowState(el, allComplete ? 'complete' : 'incomplete');
+    }
+
+    function updateDataGridSectionHeading() {
+      const el = document.getElementById('dataGridSectionHeading');
+      if (!el) return;
+      const section = document.getElementById('dataGridSection');
+      if (!section || section.style.display === 'none') {
+        applySectionHeadingWorkflowState(el, 'neutral');
+        return;
+      }
+      const selected = getSelectedEntriesForGrid();
+      if (selected.length === 0) {
+        applySectionHeadingWorkflowState(el, 'neutral');
+        return;
+      }
+      const allComplete = selected.every((e) => entryWorkflowChecksComplete(e));
+      applySectionHeadingWorkflowState(el, allComplete ? 'complete' : 'incomplete');
+    }
+
+    function updateAllSectionHeadings() {
+      updateDataEntrySectionHeading();
+      updateSavedSectionHeading();
+      updateDataGridSectionHeading();
     }
 
     function createMonthAmountRow(value, canRemove) {
@@ -1074,6 +1148,7 @@
       form.submitGrid.checked = false;
       form.approvalsFinance.checked = false;
       renderMonthAmountRows(document.getElementById('monthAmountRows'), [{ month: '', monthlyAmount: '' }]);
+      updateDataEntrySectionHeading();
     }
 
     let editingIndex = -1;
@@ -1108,6 +1183,7 @@
       editingIndex = index;
       document.getElementById('submitBtn').textContent = 'Update entry';
       document.getElementById('cancelEditBtn').style.display = 'inline-block';
+      updateDataEntrySectionHeading();
     }
 
     function exitEditMode() {
@@ -1407,6 +1483,9 @@
         includeCb.className = 'include-in-grid-cb';
         includeCb.checked = true;
         includeCb.title = 'Include in grid';
+        includeCb.addEventListener('change', () => {
+          updateDataGridSectionHeading();
+        });
         actions.appendChild(includeCb);
 
         const editBtn = document.createElement('button');
@@ -1493,6 +1572,8 @@
               list[index][f] = cb.checked;
               setEntries(list);
               updateCardHeaderCheckState(card, list[index]);
+              updateSavedSectionHeading();
+              updateDataGridSectionHeading();
             }
           });
           wrap.appendChild(cb);
@@ -1527,6 +1608,8 @@
 
       const selectAll = document.getElementById('selectAllForGrid');
       if (selectAll) selectAll.checked = true;
+      updateSavedSectionHeading();
+      updateDataGridSectionHeading();
     }
 
     function escapeHtml(str) {
@@ -1909,12 +1992,14 @@
     document.getElementById('selectAllForGrid').addEventListener('change', function() {
       const checked = this.checked;
       document.querySelectorAll('.include-in-grid-cb').forEach(cb => { cb.checked = checked; });
+      updateDataGridSectionHeading();
     });
 
     document.getElementById('generateGridBtn').addEventListener('click', () => {
       buildDataGrid();
       document.getElementById('dataGridSection').style.display = 'block';
       document.getElementById('dataGridSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      updateDataGridSectionHeading();
     });
 
     document.getElementById('downloadGridCsvBtn').addEventListener('click', downloadGridCsv);
@@ -1962,7 +2047,13 @@
     renderMonthAmountRows(document.getElementById('monthAmountRows'), [{ month: '', monthlyAmount: '' }]);
     renderWbsLinesRows(document.getElementById('wbsLinesRows'), [{ wbsElement: '', projectPrId: '', totalAmount: '' }]);
 
+    WORKFLOW_CHECK_FIELDS.forEach((f) => {
+      const field = document.querySelector(`#entryForm [name="${f}"]`);
+      if (field) field.addEventListener('change', () => updateDataEntrySectionHeading());
+    });
+
     renderSavedRows();
+    updateDataEntrySectionHeading();
   </script>
 </body>
 </html>
