@@ -343,6 +343,132 @@
       color: var(--text-muted);
     }
 
+    .saved-entries-toolbar {
+      margin-bottom: 1rem;
+    }
+
+    .saved-entries-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-width: 960px;
+    }
+
+    .entry-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .entry-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .entry-card-header:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    .entry-card-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.25rem;
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      transition: transform 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .entry-card.collapsed .entry-card-toggle {
+      transform: rotate(-90deg);
+    }
+
+    .entry-card-title {
+      flex: 1;
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: -0.01em;
+      min-width: 0;
+      word-break: break-word;
+    }
+
+    .entry-card-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .entry-card-header-actions .include-in-grid-cb {
+      cursor: pointer;
+    }
+
+    .entry-card-header-actions .btn-row-edit {
+      cursor: pointer;
+    }
+
+    .entry-card-body {
+      padding: 0.75rem 1rem 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .entry-card.collapsed .entry-card-body {
+      display: none;
+    }
+
+    .entry-card-fields {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-field-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 200px) 1fr;
+      gap: 0.5rem 1rem;
+      align-items: start;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-field-row:last-child {
+      border-bottom: none;
+    }
+
+    .card-field-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      padding-top: 0.35rem;
+    }
+
+    .card-field-value-wrap {
+      min-width: 0;
+    }
+
+    .card-field-value-wrap .editable-cell {
+      width: 100%;
+    }
+
+    .card-field-value-wrap .cell-input,
+    .card-field-value-wrap .cell-input-textarea {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .card-field-value-wrap .col-justification .cell-value {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
     .grid-toolbar {
       display: flex;
       align-items: center;
@@ -513,44 +639,10 @@
       <h2 style="margin: 0;">Saved entries</h2>
       <button type="button" class="btn btn-primary" id="generateGridBtn">Generate grid</button>
     </div>
-    <div class="sheet-wrap">
-      <table id="trackingTable">
-        <thead>
-          <tr>
-            <th class="row-actions" style="min-width: 90px;"></th>
-            <th class="col-check" style="width: 100px;" title="Include in grid">
-              <label class="select-all-label"><input type="checkbox" id="selectAllForGrid" checked /> Include in grid</label>
-            </th>
-            <th class="col-ritm">RITM</th>
-            <th class="col-name">Name</th>
-            <th class="col-wbs">WBS Element</th>
-            <th class="col-project-pr">Project PR ID</th>
-            <th class="col-vendor">Vendor</th>
-            <th class="col-check" title="Pull user stories">Pull user stories</th>
-            <th class="col-check" title="Vendor submission">Vendor submission</th>
-            <th class="col-check" title="Confirm monthly dollar amounts">Confirm monthly $</th>
-            <th class="col-check" title="Submit grid to finance">Submit grid to finance</th>
-            <th class="col-check" title="Approvals from finance">Approvals from finance</th>
-            <th class="col-quarter">Quarter</th>
-            <th class="col-capex-opex">CAPEX or OPEX</th>
-            <th class="col-date">Start date</th>
-            <th class="col-date">End date</th>
-            <th class="col-amount">Total $ amount</th>
-            <th class="col-month">Month</th>
-            <th class="col-monthly-amount">Monthly $ amount</th>
-            <th class="col-routine-support">Routine Support Break Fix %</th>
-            <th class="col-lodging-tools">Lodging Tools Live Ops %</th>
-            <th class="col-security-pct">Security %</th>
-            <th class="col-forecasted-budget">Forecasted in Project Budget</th>
-            <th class="col-director">Director</th>
-            <th class="col-vp">VP</th>
-            <th class="col-requestor">Requestor</th>
-            <th class="col-justification">Justification</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
+    <div class="saved-entries-toolbar">
+      <label class="select-all-label"><input type="checkbox" id="selectAllForGrid" checked /> Include all in grid</label>
     </div>
+    <div id="savedEntriesCards" class="saved-entries-cards"></div>
   </section>
 
   <section class="data-grid-section" id="dataGridSection" style="display: none;">
@@ -665,15 +757,23 @@
       return Math.abs(total - sumMonthly) > 0.01;
     }
 
-    function updateTotalMismatchHighlight(cellTd, entryIndex) {
-      const row = cellTd.closest('tr');
-      if (!row) return;
-      const totalCell = row.querySelector('td.col-amount');
+    function updateTotalMismatchHighlight(cellEl, entryIndex) {
+      const container = cellEl.closest('.entry-card') || cellEl.closest('tr');
+      if (!container) return;
+      const totalCell = container.querySelector('[data-field="totalAmount"]');
       if (!totalCell) return;
       const entries = getEntries();
       const entry = entries[entryIndex];
       if (entry && totalAmountMismatch(entry)) totalCell.classList.add('amount-mismatch');
       else totalCell.classList.remove('amount-mismatch');
+    }
+
+    function refreshEntryCardHeader(card, entry) {
+      const title = card.querySelector('.entry-card-title');
+      if (!title || !entry) return;
+      const r = (entry.ritm || '').trim() || '—';
+      const n = (entry.name || '').trim() || '—';
+      title.textContent = r + ' · ' + n;
     }
 
     function createMonthAmountRow(value, canRemove) {
@@ -1026,8 +1126,9 @@
       }
     }
 
-    function makeEditableCell(entry, index, field, cellClass) {
-      const td = document.createElement('td');
+    function makeEditableCell(entry, index, field, cellClass, cellTagName) {
+      const tag = cellTagName || 'td';
+      const td = document.createElement(tag);
       td.className = cellClass + ' editable-cell';
       td.dataset.entryIndex = String(index);
       td.dataset.field = field;
@@ -1138,6 +1239,10 @@
             setEntries(entries);
           }
           updateTotalMismatchHighlight(td, index);
+          const card = td.closest('.entry-card');
+          if (card && entries[index] && (field === 'ritm' || field === 'name')) {
+            refreshEntryCardHeader(card, entries[index]);
+          }
           restoreCell();
         }
 
@@ -1154,7 +1259,10 @@
 
         input.addEventListener('blur', () => saveAndClose());
         input.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') { input.blur(); e.preventDefault(); }
+          if (e.key === 'Enter' && input.tagName !== 'TEXTAREA') {
+            input.blur();
+            e.preventDefault();
+          }
           if (e.key === 'Escape') { restoreCell(true); e.preventDefault(); }
         });
 
@@ -1168,61 +1276,133 @@
       return td;
     }
 
+    function appendCardFieldRow(fieldsEl, labelText, valueNode) {
+      const row = document.createElement('div');
+      row.className = 'card-field-row';
+      const lab = document.createElement('span');
+      lab.className = 'card-field-label';
+      lab.textContent = labelText;
+      row.appendChild(lab);
+      const wrap = document.createElement('div');
+      wrap.className = 'card-field-value-wrap';
+      wrap.appendChild(valueNode);
+      row.appendChild(wrap);
+      fieldsEl.appendChild(row);
+    }
+
     function renderSavedRows() {
       const entries = getEntries();
-      const tbody = document.getElementById('tbody');
-      tbody.innerHTML = '';
-      entries.forEach((entry, index) => {
-        const tr = document.createElement('tr');
-        tr.dataset.entryIndex = String(index);
+      const root = document.getElementById('savedEntriesCards');
+      if (!root) return;
+      root.innerHTML = '';
 
-        const actionsTd = document.createElement('td');
-        actionsTd.className = 'row-actions';
+      const mk = (e, i, f, c) => makeEditableCell(e, i, f, c, 'div');
+
+      entries.forEach((entry, index) => {
+        const card = document.createElement('article');
+        card.className = 'entry-card';
+        card.dataset.entryIndex = String(index);
+
+        const header = document.createElement('header');
+        header.className = 'entry-card-header';
+        header.setAttribute('role', 'button');
+        header.setAttribute('tabindex', '0');
+        header.setAttribute('aria-expanded', 'true');
+
+        const toggle = document.createElement('span');
+        toggle.className = 'entry-card-toggle';
+        toggle.textContent = '▼';
+
+        const title = document.createElement('span');
+        title.className = 'entry-card-title';
+        title.textContent =
+          ((entry.ritm || '').trim() || '—') + ' · ' + ((entry.name || '').trim() || '—');
+
+        const actions = document.createElement('div');
+        actions.className = 'entry-card-header-actions';
+
+        const includeCb = document.createElement('input');
+        includeCb.type = 'checkbox';
+        includeCb.className = 'include-in-grid-cb';
+        includeCb.checked = true;
+        includeCb.title = 'Include in grid';
+        actions.appendChild(includeCb);
+
         const editBtn = document.createElement('button');
         editBtn.type = 'button';
         editBtn.className = 'btn btn-row-edit';
         editBtn.title = 'Edit in form (add months, etc.)';
         editBtn.textContent = 'Edit';
-        editBtn.addEventListener('click', () => {
+        editBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
           loadEntryIntoForm(entry, index);
           document.querySelector('.data-entry').scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
+        actions.appendChild(editBtn);
+
         const delBtn = document.createElement('button');
         delBtn.type = 'button';
         delBtn.className = 'btn btn-row-del';
         delBtn.title = 'Remove entry';
         delBtn.textContent = '×';
-        delBtn.addEventListener('click', () => {
+        delBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
           const list = getEntries();
           list.splice(index, 1);
           setEntries(list);
           renderSavedRows();
           exitEditMode();
         });
-        actionsTd.appendChild(editBtn);
-        actionsTd.appendChild(delBtn);
-        tr.appendChild(actionsTd);
+        actions.appendChild(delBtn);
 
-        const includeTd = document.createElement('td');
-        includeTd.className = 'col-check';
-        const includeCb = document.createElement('input');
-        includeCb.type = 'checkbox';
-        includeCb.className = 'include-in-grid-cb';
-        includeCb.checked = true;
-        includeCb.title = 'Include in grid';
-        includeTd.appendChild(includeCb);
-        tr.appendChild(includeTd);
+        header.appendChild(toggle);
+        header.appendChild(title);
+        header.appendChild(actions);
 
-        tr.appendChild(makeEditableCell(entry, index, 'ritm', 'col-ritm'));
-        tr.appendChild(makeEditableCell(entry, index, 'name', 'col-name'));
-        tr.appendChild(makeEditableCell(entry, index, 'wbsElement', 'col-wbs'));
-        tr.appendChild(makeEditableCell(entry, index, 'projectPrId', 'col-project-pr'));
-        tr.appendChild(makeEditableCell(entry, index, 'vendor', 'col-vendor'));
+        function toggleCollapsed() {
+          const collapsed = card.classList.toggle('collapsed');
+          header.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        }
 
-        const checkFields = ['pullUserStories', 'vendorSubmission', 'confirmMonthly', 'submitGrid', 'approvalsFinance'];
-        checkFields.forEach(f => {
-          const td = document.createElement('td');
-          td.className = 'col-check';
+        header.addEventListener('click', (e) => {
+          if (e.target.closest('button') || e.target.closest('input')) return;
+          toggleCollapsed();
+        });
+        header.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            if (e.target.closest('button') || e.target.closest('input')) return;
+            e.preventDefault();
+            toggleCollapsed();
+          }
+        });
+
+        const body = document.createElement('div');
+        body.className = 'entry-card-body';
+        const fields = document.createElement('div');
+        fields.className = 'entry-card-fields';
+
+        appendCardFieldRow(fields, 'RITM', mk(entry, index, 'ritm', 'col-ritm'));
+        appendCardFieldRow(fields, 'Name', mk(entry, index, 'name', 'col-name'));
+        appendCardFieldRow(fields, 'WBS Element', mk(entry, index, 'wbsElement', 'col-wbs'));
+        appendCardFieldRow(fields, 'Project PR ID', mk(entry, index, 'projectPrId', 'col-project-pr'));
+        appendCardFieldRow(fields, 'Vendor', mk(entry, index, 'vendor', 'col-vendor'));
+
+        const checkLabels = [
+          ['pullUserStories', 'Pull user stories'],
+          ['vendorSubmission', 'Vendor submission'],
+          ['confirmMonthly', 'Confirm monthly $'],
+          ['submitGrid', 'Submit grid to finance'],
+          ['approvalsFinance', 'Approvals from finance']
+        ];
+        checkLabels.forEach(([f, lbl]) => {
+          const row = document.createElement('div');
+          row.className = 'card-field-row';
+          const lab = document.createElement('span');
+          lab.className = 'card-field-label';
+          lab.textContent = lbl;
+          row.appendChild(lab);
+          const wrap = document.createElement('div');
+          wrap.className = 'card-field-value-wrap';
           const cb = document.createElement('input');
           cb.type = 'checkbox';
           cb.checked = !!entry[f];
@@ -1233,30 +1413,35 @@
               setEntries(list);
             }
           });
-          td.appendChild(cb);
-          tr.appendChild(td);
+          wrap.appendChild(cb);
+          row.appendChild(wrap);
+          fields.appendChild(row);
         });
 
-        tr.appendChild(makeEditableCell(entry, index, 'quarter', 'col-quarter'));
-        tr.appendChild(makeEditableCell(entry, index, 'capexOpex', 'col-capex-opex'));
-        tr.appendChild(makeEditableCell(entry, index, 'startDate', 'col-date'));
-        tr.appendChild(makeEditableCell(entry, index, 'endDate', 'col-date'));
-        const totalTd = makeEditableCell(entry, index, 'totalAmount', 'col-amount');
-        if (totalAmountMismatch(entry)) totalTd.classList.add('amount-mismatch');
-        tr.appendChild(totalTd);
-        tr.appendChild(makeEditableCell(entry, index, 'month', 'col-month'));
-        tr.appendChild(makeEditableCell(entry, index, 'monthlyAmount', 'col-monthly-amount'));
-        tr.appendChild(makeEditableCell(entry, index, 'routineSupportBreakFix', 'col-routine-support'));
-        tr.appendChild(makeEditableCell(entry, index, 'lodgingToolsLiveOps', 'col-lodging-tools'));
-        tr.appendChild(makeEditableCell(entry, index, 'securityPct', 'col-security-pct'));
-        tr.appendChild(makeEditableCell(entry, index, 'forecastedInProjectBudget', 'col-forecasted-budget'));
-        tr.appendChild(makeEditableCell(entry, index, 'director', 'col-director'));
-        tr.appendChild(makeEditableCell(entry, index, 'vp', 'col-vp'));
-        tr.appendChild(makeEditableCell(entry, index, 'requestor', 'col-requestor'));
-        tr.appendChild(makeEditableCell(entry, index, 'justification', 'col-justification'));
+        appendCardFieldRow(fields, 'Quarter', mk(entry, index, 'quarter', 'col-quarter'));
+        appendCardFieldRow(fields, 'CAPEX or OPEX', mk(entry, index, 'capexOpex', 'col-capex-opex'));
+        appendCardFieldRow(fields, 'Start date', mk(entry, index, 'startDate', 'col-date'));
+        appendCardFieldRow(fields, 'End date', mk(entry, index, 'endDate', 'col-date'));
+        const totalCell = mk(entry, index, 'totalAmount', 'col-amount');
+        if (totalAmountMismatch(entry)) totalCell.classList.add('amount-mismatch');
+        appendCardFieldRow(fields, 'Total $ amount', totalCell);
+        appendCardFieldRow(fields, 'Month', mk(entry, index, 'month', 'col-month'));
+        appendCardFieldRow(fields, 'Monthly $ amount', mk(entry, index, 'monthlyAmount', 'col-monthly-amount'));
+        appendCardFieldRow(fields, 'Routine Support Break Fix %', mk(entry, index, 'routineSupportBreakFix', 'col-routine-support'));
+        appendCardFieldRow(fields, 'Lodging Tools Live Ops %', mk(entry, index, 'lodgingToolsLiveOps', 'col-lodging-tools'));
+        appendCardFieldRow(fields, 'Security %', mk(entry, index, 'securityPct', 'col-security-pct'));
+        appendCardFieldRow(fields, 'Forecasted in Project Budget', mk(entry, index, 'forecastedInProjectBudget', 'col-forecasted-budget'));
+        appendCardFieldRow(fields, 'Director', mk(entry, index, 'director', 'col-director'));
+        appendCardFieldRow(fields, 'VP', mk(entry, index, 'vp', 'col-vp'));
+        appendCardFieldRow(fields, 'Requestor', mk(entry, index, 'requestor', 'col-requestor'));
+        appendCardFieldRow(fields, 'Justification', mk(entry, index, 'justification', 'col-justification'));
 
-        tbody.appendChild(tr);
+        body.appendChild(fields);
+        card.appendChild(header);
+        card.appendChild(body);
+        root.appendChild(card);
       });
+
       const selectAll = document.getElementById('selectAllForGrid');
       if (selectAll) selectAll.checked = true;
     }
@@ -1273,11 +1458,12 @@
 
     function getSelectedEntriesForGrid() {
       const entries = getEntries();
-      const tbody = document.getElementById('tbody');
+      const root = document.getElementById('savedEntriesCards');
       const selected = [];
-      tbody.querySelectorAll('tr').forEach(tr => {
-        const idx = parseInt(tr.dataset.entryIndex, 10);
-        const cb = tr.querySelector('.include-in-grid-cb');
+      if (!root) return selected;
+      root.querySelectorAll('.entry-card').forEach(card => {
+        const idx = parseInt(card.dataset.entryIndex, 10);
+        const cb = card.querySelector('.include-in-grid-cb');
         if (cb && cb.checked && !isNaN(idx) && entries[idx]) selected.push(entries[idx]);
       });
       return selected;
