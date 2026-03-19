@@ -582,6 +582,18 @@
       return lines.length ? lines.join('\n') : '';
     }
 
+    function gridPctFieldIsBlank(entry, field) {
+      const v = String(entry[field] || '').replace(/%/g, '').trim();
+      return v === '';
+    }
+
+    function shouldShowGridField(entry, field) {
+      if (field === 'routineSupportBreakFix' || field === 'lodgingToolsLiveOps' || field === 'securityPct') {
+        return !gridPctFieldIsBlank(entry, field);
+      }
+      return true;
+    }
+
     function getMonthlyBreakdownLines(entry) {
       const months = ensureMonths(entry).filter(m => m.month || m.monthlyAmount);
       if (!months.length) return [];
@@ -591,10 +603,12 @@
       const secPct = pct('securityPct');
       const fmt = (n) => isNaN(n) || n === 0 ? '$0' : '$' + Math.round(n).toLocaleString('en-US', { maximumFractionDigits: 0, minimumFractionDigits: 0 });
       const categories = [
-        { num: 1, label: 'Routine Support Break Fix', pct: rsbfPct, pctVal: entry.routineSupportBreakFix },
-        { num: 2, label: 'Lodging Tools Live Ops', pct: ltlPct, pctVal: entry.lodgingToolsLiveOps },
-        { num: 3, label: 'Security', pct: secPct, pctVal: entry.securityPct }
-      ];
+        { label: 'Routine Support Break Fix', pct: rsbfPct, pctVal: entry.routineSupportBreakFix },
+        { label: 'Lodging Tools Live Ops', pct: ltlPct, pctVal: entry.lodgingToolsLiveOps },
+        { label: 'Security', pct: secPct, pctVal: entry.securityPct }
+      ]
+        .filter((cat) => String(cat.pctVal || '').replace(/%/g, '').trim() !== '')
+        .map((cat, idx) => ({ num: idx + 1, label: cat.label, pct: cat.pct, pctVal: cat.pctVal }));
       const pctStr = (v) => (v == null || v === '') ? '' : String(v).replace(/%/g, '').trim() + '%';
       const totalFromMonths = months.reduce((s, m) => s + parseAmount(m.monthlyAmount), 0);
       const originalTotal = parseAmount(entry.totalAmount) || totalFromMonths;
@@ -1294,7 +1308,7 @@
               tr.innerHTML = '<td class="grid-col-field">' + DATA_GRID_LABELS[j] + '</td><td class="grid-col-value"></td>';
               tbody.appendChild(tr);
             }
-          } else {
+          } else if (shouldShowGridField(entry, field)) {
             const tr = document.createElement('tr');
             const tdLabel = document.createElement('td');
             tdLabel.className = 'grid-col-field';
@@ -1349,7 +1363,7 @@
               rows.push([wrapCsvCell(k === 0 ? DATA_GRID_LABELS[j] : ''), wrapCsvCell(lineText)]);
             });
             if (lines.length === 0) rows.push([wrapCsvCell(DATA_GRID_LABELS[j]), '']);
-          } else {
+          } else if (shouldShowGridField(entry, field)) {
             rows.push([wrapCsvCell(DATA_GRID_LABELS[j]), wrapCsvCell(getDisplayValue(entry, field))]);
           }
         });
@@ -1382,7 +1396,7 @@
             if (sectionLines.length === 0) {
               rows.push({ label: DATA_GRID_LABELS[j], value: '' });
             }
-          } else {
+          } else if (shouldShowGridField(entry, field)) {
             rows.push({
               label: DATA_GRID_LABELS[j],
               value: getDisplayValue(entry, field) == null ? '' : String(getDisplayValue(entry, field))
@@ -1483,7 +1497,7 @@
                   '">&nbsp;</td></tr>'
               );
             }
-          } else {
+          } else if (shouldShowGridField(entry, field)) {
             const val = getDisplayValue(entry, field);
             const valStr = val == null ? '' : String(val);
             const valHtml = valStr.trim() ? emailValueToHtml(valStr) : '&nbsp;';
