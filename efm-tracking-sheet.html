@@ -223,22 +223,82 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 1.5rem;
       margin-bottom: 2rem;
+      overflow: hidden;
     }
 
-    .data-entry h2 {
+    .data-entry-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1.25rem;
+      background: rgba(0,0,0,0.2);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .data-entry-header:hover {
+      background: rgba(0,0,0,0.3);
+    }
+
+    .data-entry-header h2 {
+      flex: 1;
       font-size: 1rem;
       font-weight: 600;
-      margin: 0 0 1rem 0;
+      margin: 0;
       color: var(--text-muted);
+    }
+
+    .data-entry-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.25rem;
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      transition: transform 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .data-entry.collapsed .data-entry-toggle {
+      transform: rotate(-90deg);
+    }
+
+    .data-entry-body {
+      padding: 1.25rem 1.5rem 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .data-entry.collapsed .data-entry-body {
+      display: none;
+    }
+
+    .form-section {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .form-section:last-of-type {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .form-section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--accent);
+      margin: 0 0 0.875rem 0;
     }
 
     .entry-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
       gap: 1rem 1.5rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0;
     }
 
     .entry-field {
@@ -371,6 +431,19 @@
       user-select: none;
     }
 
+    .entry-card.all-checked.collapsed .entry-card-header {
+      background: rgba(63, 185, 80, 0.15);
+      border-bottom-color: rgba(63, 185, 80, 0.3);
+    }
+
+    .entry-card.all-checked.collapsed .entry-card-title {
+      color: var(--success);
+    }
+
+    .entry-card.all-checked.collapsed .entry-card-toggle {
+      color: var(--success);
+    }
+
     .entry-card-header:focus {
       outline: 2px solid var(--accent);
       outline-offset: -2px;
@@ -398,6 +471,25 @@
       letter-spacing: -0.01em;
       min-width: 0;
       word-break: break-word;
+    }
+
+    .entry-card-badges {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      flex-shrink: 1;
+      min-width: 0;
+    }
+
+    .entry-badge {
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      background: rgba(88, 166, 255, 0.12);
+      color: var(--accent);
+      border: 1px solid rgba(88, 166, 255, 0.25);
+      white-space: nowrap;
     }
 
     .entry-card-header-actions {
@@ -523,121 +615,160 @@
 <body>
   <h1>EFM Tracking Sheet</h1>
 
-  <section class="data-entry">
-    <h2>Data entry</h2>
+  <section class="data-entry collapsed" id="dataEntrySection">
+    <div class="data-entry-header" id="dataEntryToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="dataEntryBody">
+      <span class="data-entry-toggle">▼</span>
+      <h2 id="dataEntryTitle">New EFM</h2>
+    </div>
+    <div class="data-entry-body" id="dataEntryBody">
     <form id="entryForm">
-      <div class="entry-grid">
-        <div class="entry-field">
-          <label for="ritm">RITM</label>
-          <input type="text" id="ritm" name="ritm" placeholder="RITM number" />
+
+      <div class="form-section">
+        <p class="form-section-title">Basic Info</p>
+        <div class="entry-grid">
+          <div class="entry-field">
+            <label for="ritm">RITM</label>
+            <input type="text" id="ritm" name="ritm" placeholder="RITM number" />
+          </div>
+          <div class="entry-field">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" placeholder="EFM name" />
+          </div>
+          <div class="entry-field">
+            <label for="vendor">Vendor</label>
+            <input type="text" id="vendor" name="vendor" placeholder="Vendor" />
+          </div>
+          <div class="entry-field">
+            <label for="requestor">Requestor</label>
+            <input type="text" id="requestor" name="requestor" placeholder="Requestor" />
+          </div>
         </div>
-        <div class="entry-field">
-          <label for="name">Name</label>
-          <input type="text" id="name" name="name" placeholder="Name" />
+      </div>
+
+      <div class="form-section">
+        <p class="form-section-title">Financial</p>
+        <div class="entry-grid" style="margin-bottom: 1rem;">
+          <div class="entry-field">
+            <label for="quarter">Quarter</label>
+            <select id="quarter" name="quarter">
+              <option value="">Select</option>
+              <option value="Q1">Q1</option>
+              <option value="Q2">Q2</option>
+              <option value="Q3">Q3</option>
+              <option value="Q4">Q4</option>
+            </select>
+          </div>
+          <div class="entry-field">
+            <label for="capexOpex">CAPEX or OPEX</label>
+            <select id="capexOpex" name="capexOpex">
+              <option value=""></option>
+              <option value="CAPEX">CAPEX</option>
+              <option value="OPEX">OPEX</option>
+            </select>
+          </div>
+          <div class="entry-field">
+            <label for="totalAmount">Total $ amount</label>
+            <input type="text" id="totalAmount" name="totalAmount" placeholder="$ 0" inputmode="decimal" />
+          </div>
+          <div class="entry-field">
+            <label for="startDate">Start date</label>
+            <input type="date" id="startDate" name="startDate" />
+          </div>
+          <div class="entry-field">
+            <label for="endDate">End date</label>
+            <input type="date" id="endDate" name="endDate" />
+          </div>
         </div>
-        <div class="entry-field wbs-lines-block" style="grid-column: 1 / -1;">
+        <div class="entry-field wbs-lines-block" style="margin-bottom: 1rem;">
           <label>WBS Element / Project PR ID / Total amount</label>
           <div id="wbsLinesRows" class="wbs-lines-rows"></div>
           <button type="button" class="btn" id="addWbsLineBtn" style="margin-top: 0.5rem;">+ Add WBS line</button>
         </div>
-        <div class="entry-field">
-          <label for="vendor">Vendor</label>
-          <input type="text" id="vendor" name="vendor" placeholder="Vendor" />
-        </div>
-        <div class="entry-field">
-          <label for="quarter">Quarter</label>
-          <select id="quarter" name="quarter">
-            <option value="">Select</option>
-            <option value="Q1">Q1</option>
-            <option value="Q2">Q2</option>
-            <option value="Q3">Q3</option>
-            <option value="Q4">Q4</option>
-          </select>
-        </div>
-        <div class="entry-field">
-          <label for="capexOpex">CAPEX or OPEX</label>
-          <select id="capexOpex" name="capexOpex">
-            <option value=""></option>
-            <option value="CAPEX">CAPEX</option>
-            <option value="OPEX">OPEX</option>
-          </select>
-        </div>
-        <div class="entry-field">
-          <label for="totalAmount">Total $ amount</label>
-          <input type="text" id="totalAmount" name="totalAmount" placeholder="$ 0" inputmode="decimal" />
-        </div>
-        <div class="entry-field">
-          <label for="startDate">Start date</label>
-          <input type="date" id="startDate" name="startDate" />
-        </div>
-        <div class="entry-field">
-          <label for="endDate">End date</label>
-          <input type="date" id="endDate" name="endDate" />
-        </div>
-        <div class="entry-field month-amount-block" style="grid-column: 1 / -1;">
-          <label>Month &amp; Monthly $ amount</label>
+        <div class="entry-field month-amount-block">
+          <label>Monthly breakdown</label>
           <div id="monthAmountRows" class="month-amount-rows"></div>
           <button type="button" class="btn" id="addMonthBtn" style="margin-top: 0.5rem;">+ Add month</button>
         </div>
-        <div class="entry-field">
-          <label><input type="checkbox" name="pullUserStories" /> Pull user stories</label>
-        </div>
-        <div class="entry-field">
-          <label><input type="checkbox" name="vendorSubmission" /> Vendor submission</label>
-        </div>
-        <div class="entry-field">
-          <label><input type="checkbox" name="confirmMonthly" /> Confirm monthly $</label>
-        </div>
-        <div class="entry-field">
-          <label><input type="checkbox" name="submitGrid" /> Submit grid to finance</label>
-        </div>
-        <div class="entry-field">
-          <label><input type="checkbox" name="approvalsFinance" /> Approvals from finance</label>
-        </div>
-        <div class="entry-field">
-          <label for="routineSupportBreakFix">Routine Support Break Fix %</label>
-          <input type="text" id="routineSupportBreakFix" name="routineSupportBreakFix" placeholder="e.g. 25" inputmode="decimal" />
-        </div>
-        <div class="entry-field">
-          <label for="lodgingToolsLiveOps">Lodging Tools Live Ops %</label>
-          <input type="text" id="lodgingToolsLiveOps" name="lodgingToolsLiveOps" placeholder="e.g. 25" inputmode="decimal" />
-        </div>
-        <div class="entry-field">
-          <label for="securityPct">Security %</label>
-          <input type="text" id="securityPct" name="securityPct" placeholder="e.g. 25" inputmode="decimal" />
-        </div>
-        <div class="entry-field">
-          <label for="forecastedInProjectBudget">Forecasted in Project Budget</label>
-          <input type="text" id="forecastedInProjectBudget" name="forecastedInProjectBudget" placeholder="Forecasted in Project Budget" />
-        </div>
-        <div class="entry-field">
-          <label for="director">Director</label>
-          <input type="text" id="director" name="director" placeholder="Director" />
-        </div>
-        <div class="entry-field">
-          <label for="vp">VP</label>
-          <input type="text" id="vp" name="vp" placeholder="VP" />
-        </div>
-        <div class="entry-field">
-          <label for="requestor">Requestor</label>
-          <input type="text" id="requestor" name="requestor" placeholder="Requestor" />
-        </div>
-        <div class="entry-field full-width justification-field">
-          <label for="justification">Justification</label>
-          <textarea id="justification" name="justification" rows="4" placeholder="Enter justification (text will wrap)" style="resize: vertical; min-height: 5rem;"></textarea>
+      </div>
+
+      <div class="form-section">
+        <p class="form-section-title">Budget Allocation</p>
+        <div class="entry-grid">
+          <div class="entry-field">
+            <label for="routineSupportBreakFix">Routine Support Break Fix %</label>
+            <input type="text" id="routineSupportBreakFix" name="routineSupportBreakFix" placeholder="e.g. 25" inputmode="decimal" />
+          </div>
+          <div class="entry-field">
+            <label for="lodgingToolsLiveOps">Lodging Tools Live Ops %</label>
+            <input type="text" id="lodgingToolsLiveOps" name="lodgingToolsLiveOps" placeholder="e.g. 25" inputmode="decimal" />
+          </div>
+          <div class="entry-field">
+            <label for="securityPct">Security %</label>
+            <input type="text" id="securityPct" name="securityPct" placeholder="e.g. 25" inputmode="decimal" />
+          </div>
+          <div class="entry-field">
+            <label for="forecastedInProjectBudget">Forecasted in Project Budget</label>
+            <input type="text" id="forecastedInProjectBudget" name="forecastedInProjectBudget" placeholder="Yes / No / Amount" />
+          </div>
         </div>
       </div>
+
+      <div class="form-section">
+        <p class="form-section-title">Checklist</p>
+        <div class="entry-grid">
+          <div class="entry-field">
+            <label><input type="checkbox" name="pullUserStories" /> Pull user stories</label>
+          </div>
+          <div class="entry-field">
+            <label><input type="checkbox" name="vendorSubmission" /> Vendor submission</label>
+          </div>
+          <div class="entry-field">
+            <label><input type="checkbox" name="confirmMonthly" /> Confirm monthly $</label>
+          </div>
+          <div class="entry-field">
+            <label><input type="checkbox" name="submitGrid" /> Submit grid to finance</label>
+          </div>
+          <div class="entry-field">
+            <label><input type="checkbox" name="approvalsFinance" /> Approvals from finance</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <p class="form-section-title">Team</p>
+        <div class="entry-grid">
+          <div class="entry-field">
+            <label for="director">Director</label>
+            <input type="text" id="director" name="director" placeholder="Director" />
+          </div>
+          <div class="entry-field">
+            <label for="vp">VP</label>
+            <input type="text" id="vp" name="vp" placeholder="VP" />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <p class="form-section-title">Notes</p>
+        <div class="entry-field justification-field">
+          <label for="justification">Justification</label>
+          <textarea id="justification" name="justification" rows="4" placeholder="Enter justification" style="resize: vertical; min-height: 5rem; width: 100%; box-sizing: border-box;"></textarea>
+        </div>
+      </div>
+
       <div class="entry-actions">
         <button type="submit" class="btn btn-primary" id="submitBtn">Save entry</button>
         <button type="button" class="btn" id="cancelEditBtn" style="display: none;">Cancel</button>
       </div>
     </form>
+    </div>
   </section>
 
   <section class="saved-section">
     <div class="grid-toolbar">
       <h2 style="margin: 0;">Saved entries</h2>
-      <button type="button" class="btn btn-primary" id="generateGridBtn">Generate grid</button>
+      <button type="button" class="btn btn-primary" id="newEfmBtn">+ New EFM</button>
+      <button type="button" class="btn" id="generateGridBtn">Generate grid</button>
     </div>
     <div class="saved-entries-toolbar">
       <label class="select-all-label"><input type="checkbox" id="selectAllForGrid" checked /> Include all in grid</label>
@@ -766,6 +897,13 @@
       const entry = entries[entryIndex];
       if (entry && totalAmountMismatch(entry)) totalCell.classList.add('amount-mismatch');
       else totalCell.classList.remove('amount-mismatch');
+    }
+
+    const CHECKLIST_FIELDS = ['pullUserStories', 'vendorSubmission', 'confirmMonthly', 'submitGrid', 'approvalsFinance'];
+
+    function refreshAllChecked(card, entry) {
+      const complete = CHECKLIST_FIELDS.every(f => !!entry[f]);
+      card.classList.toggle('all-checked', complete);
     }
 
     function refreshEntryCardHeader(card, entry) {
@@ -1300,14 +1438,14 @@
 
       entries.forEach((entry, index) => {
         const card = document.createElement('article');
-        card.className = 'entry-card';
+        card.className = 'entry-card collapsed';
         card.dataset.entryIndex = String(index);
 
         const header = document.createElement('header');
         header.className = 'entry-card-header';
         header.setAttribute('role', 'button');
         header.setAttribute('tabindex', '0');
-        header.setAttribute('aria-expanded', 'true');
+        header.setAttribute('aria-expanded', 'false');
 
         const toggle = document.createElement('span');
         toggle.className = 'entry-card-toggle';
@@ -1317,6 +1455,21 @@
         title.className = 'entry-card-title';
         title.textContent =
           ((entry.ritm || '').trim() || '—') + ' · ' + ((entry.name || '').trim() || '—');
+
+        const badges = document.createElement('span');
+        badges.className = 'entry-card-badges';
+        const badgeDefs = [
+          entry.quarter,
+          entry.capexOpex,
+          entry.totalAmount ? formatUSD(entry.totalAmount) : null,
+          entry.vendor || null
+        ].filter(Boolean);
+        badgeDefs.forEach(text => {
+          const b = document.createElement('span');
+          b.className = 'entry-badge';
+          b.textContent = text;
+          badges.appendChild(b);
+        });
 
         const actions = document.createElement('div');
         actions.className = 'entry-card-header-actions';
@@ -1336,7 +1489,8 @@
         editBtn.addEventListener('click', (ev) => {
           ev.stopPropagation();
           loadEntryIntoForm(entry, index);
-          document.querySelector('.data-entry').scrollIntoView({ behavior: 'smooth', block: 'start' });
+          openForm('Edit EFM');
+          dataEntrySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
         actions.appendChild(editBtn);
 
@@ -1357,6 +1511,7 @@
 
         header.appendChild(toggle);
         header.appendChild(title);
+        header.appendChild(badges);
         header.appendChild(actions);
 
         function toggleCollapsed() {
@@ -1411,6 +1566,7 @@
             if (list[index]) {
               list[index][f] = cb.checked;
               setEntries(list);
+              refreshAllChecked(card, list[index]);
             }
           });
           wrap.appendChild(cb);
@@ -1439,6 +1595,7 @@
         body.appendChild(fields);
         card.appendChild(header);
         card.appendChild(body);
+        refreshAllChecked(card, entry);
         root.appendChild(card);
       });
 
@@ -1823,6 +1980,43 @@
         });
     }
 
+    // Collapsible form
+    const dataEntrySection = document.getElementById('dataEntrySection');
+    const dataEntryToggle = document.getElementById('dataEntryToggle');
+    const dataEntryTitle = document.getElementById('dataEntryTitle');
+
+    function openForm(title) {
+      dataEntrySection.classList.remove('collapsed');
+      dataEntryToggle.setAttribute('aria-expanded', 'true');
+      if (title) dataEntryTitle.textContent = title;
+    }
+
+    function closeForm() {
+      dataEntrySection.classList.add('collapsed');
+      dataEntryToggle.setAttribute('aria-expanded', 'false');
+    }
+
+    dataEntryToggle.addEventListener('click', () => {
+      if (dataEntrySection.classList.contains('collapsed')) {
+        openForm();
+      } else {
+        closeForm();
+      }
+    });
+
+    dataEntryToggle.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        dataEntryToggle.click();
+      }
+    });
+
+    document.getElementById('newEfmBtn').addEventListener('click', () => {
+      exitEditMode();
+      openForm('New EFM');
+      dataEntrySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
     document.getElementById('selectAllForGrid').addEventListener('change', function() {
       const checked = this.checked;
       document.querySelectorAll('.include-in-grid-cb').forEach(cb => { cb.checked = checked; });
@@ -1851,10 +2045,14 @@
         clearForm();
       }
       renderSavedRows();
+      closeForm();
+      dataEntryTitle.textContent = 'New EFM';
     });
 
     document.getElementById('cancelEditBtn').addEventListener('click', () => {
       exitEditMode();
+      closeForm();
+      dataEntryTitle.textContent = 'New EFM';
     });
 
     const totalInput = document.getElementById('totalAmount');
