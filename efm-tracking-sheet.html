@@ -1865,6 +1865,17 @@
         header.appendChild(actions);
 
         function toggleCollapsed() {
+          const isOpening = card.classList.contains('collapsed');
+          if (isOpening) {
+            // Close all other cards first
+            root.querySelectorAll('.entry-card:not(.collapsed)').forEach(otherCard => {
+              if (otherCard !== card) {
+                otherCard.classList.add('collapsed');
+                const otherHeader = otherCard.querySelector('.entry-card-header');
+                if (otherHeader) otherHeader.setAttribute('aria-expanded', 'false');
+              }
+            });
+          }
           const collapsed = card.classList.toggle('collapsed');
           header.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
         }
