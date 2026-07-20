@@ -630,8 +630,12 @@
       align-items: start;
     }
 
-    .entry-card:not(.collapsed) {
-      grid-column: 1 / -1;
+    .expanded-card-area {
+      margin-bottom: 1rem;
+    }
+
+    .expanded-card-area .entry-card {
+      width: 100%;
     }
 
     .entry-card {
@@ -1125,6 +1129,7 @@
     <div class="saved-entries-toolbar">
       <label class="select-all-label"><input type="checkbox" id="selectAllForGrid" checked /> Include all in grid</label>
     </div>
+    <div id="expandedCardArea" class="expanded-card-area"></div>
     <div id="savedEntriesCards" class="saved-entries-cards"></div>
   </section>
 
@@ -1871,18 +1876,30 @@
 
         function toggleCollapsed() {
           const isOpening = card.classList.contains('collapsed');
+          const expandedArea = document.getElementById('expandedCardArea');
           if (isOpening) {
-            // Close all other cards first
-            root.querySelectorAll('.entry-card:not(.collapsed)').forEach(otherCard => {
-              if (otherCard !== card) {
-                otherCard.classList.add('collapsed');
-                const otherHeader = otherCard.querySelector('.entry-card-header');
-                if (otherHeader) otherHeader.setAttribute('aria-expanded', 'false');
-              }
-            });
+            // Close any currently expanded card and move it back to grid
+            const currentlyOpen = expandedArea.querySelector('.entry-card');
+            if (currentlyOpen) {
+              currentlyOpen.classList.add('collapsed');
+              const openHeader = currentlyOpen.querySelector('.entry-card-header');
+              if (openHeader) openHeader.setAttribute('aria-expanded', 'false');
+              root.appendChild(currentlyOpen);
+            }
+            // Move this card to the expanded area
+            card.classList.remove('collapsed');
+            header.setAttribute('aria-expanded', 'true');
+            expandedArea.appendChild(card);
+          } else {
+            // Closing - move back to grid
+            card.classList.add('collapsed');
+            header.setAttribute('aria-expanded', 'false');
+            root.appendChild(card);
           }
-          const collapsed = card.classList.toggle('collapsed');
-          header.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+          // Re-sort cards in the grid by their original index
+          const gridCards = Array.from(root.querySelectorAll('.entry-card'));
+          gridCards.sort((a, b) => parseInt(a.dataset.entryIndex) - parseInt(b.dataset.entryIndex));
+          gridCards.forEach(c => root.appendChild(c));
         }
 
         header.addEventListener('click', (e) => {
