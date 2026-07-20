@@ -364,21 +364,20 @@
     }
 
     .btn-row-del {
-      padding: 0.35rem 0.6rem;
+      padding: 0.25rem 0.5rem;
       min-width: auto;
       font-size: 1.1rem;
       line-height: 1;
-      color: #fff;
+      color: var(--text-dim);
       border: none;
-      background: var(--accent);
+      background: none;
       box-shadow: none;
-      border-radius: var(--radius-sm);
-      transition: all var(--transition);
+      transition: color var(--transition);
     }
 
     .btn-row-del:hover {
-      color: #fff;
-      background: var(--danger);
+      color: var(--danger);
+      background: var(--danger-light);
     }
 
     td.editable-cell {
@@ -713,12 +712,12 @@
     }
 
     .entry-badge {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: 600;
-      padding: 0.3rem 0.7rem;
+      padding: 0.2rem 0.6rem;
       border-radius: 999px;
-      background: #e2e8f0;
-      color: #334155;
+      background: var(--accent-light);
+      color: var(--accent);
       border: none;
       white-space: nowrap;
     }
@@ -739,15 +738,6 @@
       padding: 0.35rem 0.75rem;
       border-radius: var(--radius-sm);
       font-size: 0.8rem;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      box-shadow: none;
-    }
-
-    .entry-card-header-actions .btn-row-edit:hover {
-      background: var(--accent-hover);
-      color: #fff;
     }
 
     .entry-card-body {
