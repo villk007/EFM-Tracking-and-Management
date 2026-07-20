@@ -2242,31 +2242,10 @@
         subjectEnc +
         '&body=' +
         encodeURIComponent(bodyText == null ? pasteInstruction : bodyText);
-      const outlookLiveCompose = (bodyText) =>
-        'https://outlook.live.com/mail/0/deeplink/compose?subject=' +
-        subjectEnc +
-        '&body=' +
-        encodeURIComponent(bodyText == null ? pasteInstruction : bodyText);
 
-      const openOutlookInNewTab = (url) => {
-        const w = window.open(url, '_blank', 'noopener,noreferrer');
-        if (!w) {
-          alert('Could not open a new tab. Allow pop-ups for this page, then try Generate email again.');
-        }
-        return w;
-      };
-
-      const navigateOutlookTab = (ow, bodyText) => {
+      const openOutlook = (bodyText) => {
         const url = outlookOfficeCompose(bodyText);
-        if (ow && !ow.closed) {
-          try {
-            ow.location.replace(url);
-          } catch (e) {
-            ow.location.href = url;
-          }
-          return;
-        }
-        openOutlookInNewTab(url);
+        window.open(url, '_blank');
       };
 
       const tryRichClipboard = () => {
@@ -2281,51 +2260,17 @@
         ]);
       };
 
-      const outlookTab = window.open('about:blank', '_blank', 'noopener,noreferrer');
-
-      const fallbackLongPlain = () => {
-        const owaCompose = outlookOfficeCompose(plainBody);
-        const owaLive = outlookLiveCompose(plainBody);
-        const maxOwaLen = 7500;
-        if (owaCompose.length <= maxOwaLen) {
-          navigateOutlookTab(outlookTab, plainBody);
-          return;
-        }
-        if (owaLive.length <= maxOwaLen) {
-          if (outlookTab && !outlookTab.closed) {
-            try {
-              outlookTab.location.replace(owaLive);
-            } catch (e) {
-              outlookTab.location.href = owaLive;
-            }
-          } else {
-            openOutlookInNewTab(owaLive);
-          }
-          return;
-        }
-        const pasteHint =
-          'Full grid (plain text) was copied to your clipboard.\r\n\r\nPaste into this message (Ctrl+V / Cmd+V).\r\n';
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(plainBody).then(() => {
-            navigateOutlookTab(outlookTab, pasteHint);
-          });
-        } else {
-          navigateOutlookTab(
-            outlookTab,
-            pasteHint + '\r\n\r\n' + plainBody.slice(0, 800) + (plainBody.length > 800 ? '\r\n…' : '')
-          );
-        }
-      };
-
       tryRichClipboard()
         .then(() => {
-          navigateOutlookTab(outlookTab, pasteInstruction);
+          openOutlook(pasteInstruction);
         })
         .catch(() => {
           if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(plainBody).then(() => navigateOutlookTab(outlookTab, pasteInstruction)).catch(fallbackLongPlain);
+            navigator.clipboard.writeText(plainBody)
+              .then(() => openOutlook(pasteInstruction))
+              .catch(() => openOutlook(plainBody));
           } else {
-            fallbackLongPlain();
+            openOutlook(plainBody);
           }
         });
     }
