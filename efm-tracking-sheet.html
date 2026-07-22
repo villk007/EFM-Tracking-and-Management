@@ -949,6 +949,22 @@
           Email Grid
         </button>
       </li>
+      <li>
+        <button onclick="document.getElementById('exportDataBtn').click()">
+          <span class="nav-icon">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </span>
+          Export Data
+        </button>
+      </li>
+      <li>
+        <button onclick="document.getElementById('importDataBtn').click()">
+          <span class="nav-icon">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </span>
+          Import Data
+        </button>
+      </li>
     </ul>
     <div class="sidebar-footer">
       <p>EFM Tracking & Management</p>
@@ -1116,6 +1132,9 @@
       <h2 style="margin: 0;">Saved entries</h2>
       <button type="button" class="btn btn-primary" id="newEfmBtn" style="min-width: 150px;">+ New EFM</button>
       <button type="button" class="btn" id="generateGridBtn" style="min-width: 150px;">Generate grid</button>
+      <button type="button" class="btn" id="exportDataBtn">Export data</button>
+      <button type="button" class="btn" id="importDataBtn">Import data</button>
+      <input type="file" id="importFileInput" accept=".json" style="display: none;" />
     </div>
     <div class="saved-entries-toolbar">
       <label class="select-all-label"><input type="checkbox" id="selectAllForGrid" checked /> Include all in grid</label>
@@ -2383,6 +2402,47 @@
     renderWbsLinesRows(document.getElementById('wbsLinesRows'), [{ wbsElement: '', projectPrId: '', totalAmount: '' }]);
 
     renderSavedRows();
+
+    // Export data
+    document.getElementById('exportDataBtn').addEventListener('click', () => {
+      const entries = getEntries();
+      const json = JSON.stringify(entries, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'efm-tracking-data.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    // Import data
+    document.getElementById('importDataBtn').addEventListener('click', () => {
+      document.getElementById('importFileInput').click();
+    });
+
+    document.getElementById('importFileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const imported = JSON.parse(ev.target.result);
+          if (!Array.isArray(imported)) {
+            alert('Invalid file format. Expected a JSON array of entries.');
+            return;
+          }
+          const existing = getEntries();
+          const merged = existing.concat(imported);
+          setEntries(merged);
+          renderSavedRows();
+          alert('Imported ' + imported.length + ' entries successfully.');
+        } catch (err) {
+          alert('Error reading file: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
   </script>
 </body>
 </html>
